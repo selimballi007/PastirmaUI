@@ -12,14 +12,14 @@ export default function Register() {
   const validate = () => {
     const errs: string[] = [];
 
-    // Email kontrolü
+    // Email Control
     if (!email) {
       errs.push("Email boş olamaz.");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errs.push("Geçerli bir email giriniz.");
     }
 
-    // Şifre kontrolü
+    // Password Control
     if (!password) {
       errs.push("Şifre boş olamaz.");
     } else if (password.length < 6) {
