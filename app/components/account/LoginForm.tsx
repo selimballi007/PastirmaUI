@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 export default function LoginForm() {
     const router = useRouter();
@@ -135,6 +136,15 @@ export default function LoginForm() {
                     className="w-full mb-3 p-2 border rounded"
                     required
                 />
+
+                <div className="flex justify-end mb-3">
+                    <Link
+                        href="/account/forgot-password"
+                        className="text-sm text-blue-600 hover:underline"
+                    >
+                        Şifremi Unuttum?
+                    </Link>
+                </div>
 
                 <ReCAPTCHA
                     sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
