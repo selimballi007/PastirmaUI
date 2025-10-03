@@ -5,9 +5,13 @@ import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/store/slices/authSlice";
+import api from "@/api/axios";
 
 export default function LoginForm() {
     const router = useRouter();
+    const dispatch = useDispatch();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [messages, setMessages] = useState<string[]>([]);
@@ -45,10 +49,10 @@ export default function LoginForm() {
 
         setLoading(true);
         try {
-            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-bye", {
-                email,
-                captchaToken
-            });
+            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-bye",
+                { email, captchaToken },
+                { withCredentials: true }
+            );
 
             setMessages(["✅ Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin."]);
             setShowResend(false);
@@ -82,11 +86,12 @@ export default function LoginForm() {
         setLoading(true);
 
         try {
-            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/login", {
+            const res = await api.post("user/login", {
                 Email: email,
                 PasswordHash: password,
                 CaptchaToken: captchaToken,
             });
+            dispatch(setCredentials({ accessToken: res.data.accessToken, user: res.data.user }));
 
             setMessages(["✅ Kayıt başarılı! Giriş yapabilirsiniz."]);
             setEmail("");
