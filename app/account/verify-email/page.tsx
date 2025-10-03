@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
+import ButtonWithSpinner from "../../components/ButtonWithSpinner"
 
 export default function VerifyEmailPage() {
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [showResend, setShowResend] = useState(false);
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
     const token =
         typeof window !== "undefined"
@@ -23,20 +25,20 @@ export default function VerifyEmailPage() {
                 return;
             }
 
-            if (!captchaToken) {
-                setLoading(false);
-                return;
-            }
-
             try {
-                await axios.post(
-                    process.env.NEXT_PUBLIC_API_URL + "user/verify-email", {
-                    token,
-                    captchaToken,
-                });
+                if (recaptchaRef.current) {
+                    const captoken = await recaptchaRef.current.executeAsync();
+                    recaptchaRef.current.reset();
 
-                setMessage("✅ Email adresiniz başarıyla doğrulandı. Giriş yapabilirsiniz.");
-                setShowResend(false);
+                    await axios.post(
+                        process.env.NEXT_PUBLIC_API_URL + "user/verify-email", {
+                        Token: token,
+                        captchaToken: captoken,
+                    });
+
+                    setMessage("✅ Email adresiniz başarıyla doğrulandı. Giriş yapabilirsiniz.");
+                    setShowResend(false);
+                }
             } catch (err: unknown) {
                 if (axios.isAxiosError(err)) {
                     setMessage(err.response?.data?.message || "❌ Doğrulama başarısız oldu.");
@@ -53,20 +55,25 @@ export default function VerifyEmailPage() {
         };
 
         verifyEmail();
-    }, [token, captchaToken]);
+    }, [token]);
 
     const handleResend = async () => {
-        if (!token || !captchaToken) return;
+        if (!token) return;
 
         setLoading(true);
         try {
-            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-byt", {
-                token,
-                captchaToken,
-            });
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessage("📩 Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin.");
-            setShowResend(false);
+                await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-byt", {
+                    Token: token,
+                    captchaToken: captoken
+                });
+
+                setMessage("📩 Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin.");
+                setShowResend(false);
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setMessage(err.response?.data?.message || "❌ Mail gönderilemedi.");
@@ -82,11 +89,6 @@ export default function VerifyEmailPage() {
         <div className="max-w-md mx-auto p-6 border rounded mt-10 shadow">
             <h1 className="text-xl font-bold mb-4">E-posta Doğrulama</h1>
 
-            <ReCAPTCHA
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                onChange={(value) => setCaptchaToken(value)}
-            />
-
             {loading ? (
                 <p className="text-gray-500 mt-4">Yükleniyor...</p>
             ) : (
@@ -99,14 +101,19 @@ export default function VerifyEmailPage() {
             )}
 
             {showResend && (
-                <button
-                    onClick={handleResend}
-                    disabled={loading || !captchaToken}
-                    className="mt-4 bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                >
+                <ButtonWithSpinner loading={loading} onClick={handleResend} variant="green">
                     Yeniden Doğrulama Maili Gönder
-                </button>
+                </ButtonWithSpinner>
             )}
+
+            {/* ReCAPTCHA */}
+            <div className="flex justify-center">
+                <ReCAPTCHA
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    size="invisible"
+                    ref={recaptchaRef}
+                />
+            </div>
         </div>
     );
 }

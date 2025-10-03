@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from 'next/navigation';
@@ -8,15 +8,17 @@ import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/slices/authSlice";
 import api from "@/api/axios";
+import ButtonWithSpinner from "../ButtonWithSpinner"
 
 export default function LoginForm() {
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+
     const router = useRouter();
     const dispatch = useDispatch();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [messages, setMessages] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [showResend, setShowResend] = useState(false);
 
     const validate = () => {
@@ -45,17 +47,20 @@ export default function LoginForm() {
             return;
         }
 
-        if (!captchaToken) return;
-
         setLoading(true);
         try {
-            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-bye",
-                { email, captchaToken },
-                { withCredentials: true }
-            );
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessages(["✅ Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin."]);
-            setShowResend(false);
+                await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-bye",
+                    { Email: email, captchaToken: captoken },
+                    { withCredentials: true }
+                );
+
+                setMessages(["✅ Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin."]);
+                setShowResend(false);
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setMessages(err.response?.data?.message || "❌ Mail gönderilemedi.");
@@ -72,11 +77,6 @@ export default function LoginForm() {
         e.preventDefault();
         setMessages([]);
 
-        if (!captchaToken) {
-            setMessages(["Lütfen captcha'yı tamamlayın."]);
-            return;
-        }
-
         const errs = validate();
         if (errs.length > 0) {
             setMessages(errs);
@@ -86,25 +86,24 @@ export default function LoginForm() {
         setLoading(true);
 
         try {
-            const res = await api.post("user/login", {
-                Email: email,
-                PasswordHash: password,
-                CaptchaToken: captchaToken,
-            });
-            dispatch(setCredentials({ accessToken: res.data.accessToken, user: res.data.user }));
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessages(["✅ Kayıt başarılı! Giriş yapabilirsiniz."]);
-            setEmail("");
-            setPassword("");
-            setCaptchaToken("");
-            // captcha reset
-            // @ts-expect-error - We add a custom property to the window object
-            if (window.grecaptcha) window.grecaptcha.reset();
-            router.push('/');
+                const res = await api.post("user/login", {
+                    Email: email,
+                    PasswordHash: password,
+                    captchaToken: captoken,
+                });
+                dispatch(setCredentials({ accessToken: res.data.accessToken, user: res.data.user }));
+
+                setMessages(["✅ Kayıt başarılı! Giriş yapabilirsiniz."]);
+                setEmail("");
+                setPassword("");
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 if (err.response?.data?.errors) {
-                    console.log(err.response);
                     const backendErrs = Object.values(err.response.data.errors).flat() as string[];
                     if (err.response.status === 504) {
                         setShowResend(true);
@@ -123,26 +122,51 @@ export default function LoginForm() {
 
     return (
         <>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full mb-3 p-2 border rounded"
-                    required
-                />
+            <form
+                onSubmit={handleSubmit}
+                className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg space-y-4 sm:space-y-6"
+            >
+                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Giriş Yap</h2>
 
-                <input
-                    type="password"
-                    placeholder="Şifre"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full mb-3 p-2 border rounded"
-                    required
-                />
+                {/* Inputs */}
+                <div className="space-y-3">
+                    <input
+                        type="text"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Şifre"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        required
+                    />
+                </div>
 
-                <div className="flex justify-end mb-3">
+                {/* Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {showResend ? (
+                        <ButtonWithSpinner
+                            loading={loading}
+                            onClick={handleResend}
+                            variant="blue"
+                        >
+                            Yeniden Doğrulama Maili Gönder
+                        </ButtonWithSpinner>
+                    ) : (
+                        <ButtonWithSpinner loading={loading} type="submit" variant="green">
+                            {loading ? "Kaydediliyor..." : "Giriş Yap"}
+                        </ButtonWithSpinner>
+                    )}
+                </div>
+
+                {/* Forgot-Password Link */}
+                <div className="flex justify-start mb-2">
                     <Link
                         href="/account/forgot-password"
                         className="text-sm text-blue-600 hover:underline"
@@ -151,45 +175,31 @@ export default function LoginForm() {
                     </Link>
                 </div>
 
-                <ReCAPTCHA
-                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                    onChange={(value) => setCaptchaToken(value)}
-                />
-                {showResend && (
-                    <button
-                        onClick={handleResend}
-                        disabled={loading || !captchaToken}
-                        className="mt-4 bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                    >
-                        Yeniden Doğrulama Maili Gönder
-                    </button>
-                )}
-
-                {!showResend && (<button
-                    type="submit"
-                    disabled={loading}
-                    className={`text-white px-4 py-2 rounded ${loading
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-500 hover:bg-green-700"
-                        }`}
-                >
-                    {loading ? "Kaydediliyor..." : "Giriş Yap"}
-                </button>
-                )}
-
+                {/* Messages */}
                 {messages.length > 0 && (
-                    <div className="mt-2 text-sm text-center">
+                    <div className="mt-4 text-center space-y-1">
                         {messages.map((msg, i) => (
                             <p
                                 key={i}
-                                className={msg.startsWith("✅") ? "text-green-600" : "text-red-600"}
+                                className={`text-sm px-3 py-1 rounded ${msg.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                    }`}
                             >
                                 {msg}
                             </p>
                         ))}
                     </div>
                 )}
+
+                {/* ReCAPTCHA */}
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        size="invisible"
+                        ref={recaptchaRef}
+                    />
+                </div>
             </form>
+
         </>
     );
 }

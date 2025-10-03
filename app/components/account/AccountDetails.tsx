@@ -3,11 +3,12 @@
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { logoutApi } from "@/app/lib/api/auth";
-import { logout } from "@/store/slices/authSlice"; // auth slice’ından logout action
-//import { AccountDetailsProps } from "./types"; // kendi props tipini burada tuttuğunu varsayıyorum
+import { logout } from "@/store/slices/authSlice";
+import { User } from "@/types";
+import { IoMdExit } from 'react-icons/io'
 
 interface AccountDetailsProps {
-    user: { name: string }
+    user: User
 }
 
 export default function AccountDetails({ user }: AccountDetailsProps) {
@@ -25,20 +26,39 @@ export default function AccountDetails({ user }: AccountDetailsProps) {
     };
 
     return (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
+            {/* Sol taraf */}
             <div>
-                <h1 className="text-3xl font-bold mb-4">Hesabım</h1>
-                <p>
-                    Hoş geldiniz, <span className="font-semibold">{user.name}</span>!
+                <h1 className="text-3xl font-bold">Hesabım</h1>
+                <p className="mt-1 text-gray-700">
+                    Hoş geldiniz,{" "}
+                    <span className="font-semibold">{user.username}</span>!
                 </p>
             </div>
 
-            <button
-                onClick={handleLogout}
-                className="ml-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-            >
-                Çıkış Yap
-            </button>
+            {/* Sağ taraf */}
+            <div className="flex flex-col items-end gap-1">
+                <button
+                    onClick={handleLogout}
+                    aria-label="Çıkış Yap"
+                    className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition relative group cursor-pointer"
+                >
+                    <IoMdExit className="h-6 w-6" />
+                    {/* Tooltip */}
+                    <span className="absolute right-12 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
+                        Çıkış Yap
+                    </span>
+                </button>
+                <p className="text-xs text-gray-500">
+                    Son giriş:{" "}
+                    <span className="font-semibold text-gray-700">
+                        {new Date(user.lastLoginAt).toLocaleString("tr-TR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                        })}
+                    </span>
+                </p>
+            </div>
         </div>
     );
 }

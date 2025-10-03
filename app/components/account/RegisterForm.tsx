@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
+import ButtonWithSpinner from "../ButtonWithSpinner"
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function RegisterForm() {
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+
     const [username, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -50,16 +54,22 @@ export default function RegisterForm() {
         setLoading(true);
 
         try {
-            await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/register", {
-                Email: email,
-                UserName: username,
-                PasswordHash: password,
-            });
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessages(["✅ Hesabınızı email adresinize gönderilen linkten aktifleştirebilirsiniz. Gelen klasöründe yoksa Spam klasörünü kontrol ediniz."]);
-            setEmail("");
-            setUserName("");
-            setPassword("");
+                await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/register", {
+                    Email: email,
+                    UserName: username,
+                    PasswordHash: password,
+                    captchaToken: captoken
+                });
+
+                setMessages(["✅ Hesabınızı email adresinize gönderilen linkten aktifleştirebilirsiniz. Gelen klasöründe yoksa Spam klasörünü kontrol ediniz."]);
+                setEmail("");
+                setUserName("");
+                setPassword("");
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 if (err.response?.data?.errors) {
@@ -80,66 +90,83 @@ export default function RegisterForm() {
         <>
             <form
                 onSubmit={handleSubmit}
+                className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg space-y-4 sm:space-y-6"
             >
-                <input
-                    type="text"
-                    placeholder="Kullanıcı Adı"
-                    value={username}
-                    onChange={(e) => setUserName(e.target.value)}
-                    className="w-full mb-3 p-2 border rounded"
-                    required
-                />
+                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Kayıt Ol</h2>
 
-                <input
-                    type="text"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full mb-3 p-2 border rounded"
-                    required
-                />
+                {/* Inputlar */}
+                <div className="space-y-3">
+                    <input
+                        type="text"
+                        placeholder="Kullanıcı Adı"
+                        value={username}
+                        onChange={(e) => setUserName(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        required
+                    />
 
-                <input
-                    type="password"
-                    placeholder="Parola"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full mb-3 p-2 border rounded"
-                    required
-                />
+                    <input
+                        type="text"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        required
+                    />
 
-                {/* Kullanıcıya bilgilendirme mesajı */}
-                <p className="mb-4 text-sm text-gray-700">
+                    <input
+                        type="password"
+                        placeholder="Parola"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        required
+                    />
+                </div>
+
+                {/* Information */}
+                <p className="text-sm text-gray-700">
                     Hesap oluşturmanız için e-posta adresinize bir bağlantı gönderilecek.
                     Gönderiler klasöründe bulamazsanız Spam klasörünü kontrol ediniz.<br />
                     Kişisel verileriniz, bu web sitesindeki deneyiminizi desteklemek, hesabınıza erişimi yönetmek ve
-                    aşağıda açıklanan diğer amaçlar için kullanılacaktır. <span className="underline">Gizlilik İlkesi</span>.
+                    aşağıda açıklanan diğer amaçlar için kullanılacaktır.{" "}
+                    <span className="underline cursor-pointer">Gizlilik İlkesi</span>.
                 </p>
 
-                <button
+                {/* Register Button */}
+                <ButtonWithSpinner
+                    loading={loading}
                     type="submit"
-                    disabled={loading}
-                    className={`text-white px-4 py-2 rounded ${loading
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-500 hover:bg-green-700"
-                        }`}
+                    variant="green"
                 >
                     {loading ? "Kaydediliyor..." : "Kayıt Ol"}
-                </button>
+                </ButtonWithSpinner>
 
+                {/* Messages */}
                 {messages.length > 0 && (
-                    <div className="mt-2 text-sm text-center">
+                    <div className="mt-4 text-center space-y-1">
                         {messages.map((msg, i) => (
                             <p
                                 key={i}
-                                className={msg.startsWith("✅") ? "text-green-600" : "text-red-600"}
+                                className={`text-sm px-3 py-1 rounded ${msg.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                    }`}
                             >
                                 {msg}
                             </p>
                         ))}
                     </div>
                 )}
+
+                {/* ReCAPTCHA */}
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        size="invisible"
+                        ref={recaptchaRef}
+                    />
+                </div>
             </form>
+
         </>
     );
 }

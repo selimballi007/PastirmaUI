@@ -1,9 +1,16 @@
 export type User = {
     id: string;
-    name: string;
+    username: string;
     email: string;
-    password: string;
+    role: string;
+    lastLoginAt: string;
 };
+
+export type AuthState = {
+    accessToken: string | null;
+    isLoggedIn: boolean;
+    user: User | null;
+}
 
 export type Product = {
     id: string;

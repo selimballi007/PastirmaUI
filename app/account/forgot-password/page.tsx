@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
+import ButtonWithSpinner from "../../components/ButtonWithSpinner"
 
 export default function ForgotPasswordPage() {
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+
     const [email, setEmail] = useState("");
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -18,20 +20,21 @@ export default function ForgotPasswordPage() {
             setMessages(["Email zorunludur"]);
             return;
         }
-        if (!captchaToken) {
-            setMessages(["Lütfen Captcha doğrulayın"]);
-            return;
-        }
 
         setLoading(true);
 
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}user/forgot-password`, {
-                email,
-                captchaToken,
-            });
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessages(["✅ Eğer kayıtlı bir hesabınız varsa, şifre sıfırlama linki gönderildi."]);
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}user/forgot-password`, {
+                    Email: email,
+                    captchaToken: captoken
+                });
+
+                setMessages(["✅ Eğer kayıtlı bir hesabınız varsa, şifre sıfırlama linki gönderildi."]);
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setMessages([err.response?.data?.message || "❌ Bir hata oluştu."]);
@@ -56,19 +59,9 @@ export default function ForgotPasswordPage() {
                 required
             />
 
-            <ReCAPTCHA
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                onChange={(token) => setCaptchaToken(token)}
-            />
-
-            <button
-                type="submit"
-                disabled={loading}
-                className={`w-full text-white px-4 py-2 mt-3 rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-700"
-                    }`}
-            >
+            <ButtonWithSpinner loading={loading} type="submit" variant="green">
                 {loading ? "Gönderiliyor..." : "Şifre Sıfırlama Linki Gönder"}
-            </button>
+            </ButtonWithSpinner>
 
             {messages.length > 0 && (
                 <div className="mt-2 text-sm text-center">
@@ -82,6 +75,15 @@ export default function ForgotPasswordPage() {
                     ))}
                 </div>
             )}
+
+            {/* ReCAPTCHA */}
+            <div className="flex justify-center">
+                <ReCAPTCHA
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    size="invisible"
+                    ref={recaptchaRef}
+                />
+            </div>
         </form>
     );
 }

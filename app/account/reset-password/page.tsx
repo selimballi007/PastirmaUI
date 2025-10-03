@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
+import ButtonWithSpinner from "../../components/ButtonWithSpinner"
 
 export default function ResetPasswordPage() {
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
+
     const [token, setToken] = useState<string | null>(null);
     const [newPassword, setNewPassword] = useState("");
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -24,22 +26,23 @@ export default function ResetPasswordPage() {
             setMessage("❌ Şifre en az 6 karakter olmalı");
             return;
         }
-        if (!captchaToken) {
-            setMessage("❌ Captcha doğrulanmadı");
-            return;
-        }
 
         setLoading(true);
 
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}user/reset-password`, {
-                token,
-                newPassword,
-                captchaToken,
-            });
+            if (recaptchaRef.current) {
+                const captoken = await recaptchaRef.current.executeAsync();
+                recaptchaRef.current.reset();
 
-            setMessage("✅ Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz.");
-            setNewPassword("");
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}user/reset-password`, {
+                    Token: token,
+                    NewPassword: newPassword,
+                    captchaToken: captoken,
+                });
+
+                setMessage("✅ Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz.");
+                setNewPassword("");
+            }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 setMessage(err.response?.data?.message || "❌ Şifre güncellenemedi.");
@@ -64,19 +67,9 @@ export default function ResetPasswordPage() {
                 required
             />
 
-            <ReCAPTCHA
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                onChange={(token) => setCaptchaToken(token)}
-            />
-
-            <button
-                type="submit"
-                disabled={loading}
-                className={`w-full text-white px-4 py-2 mt-3 rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-700"
-                    }`}
-            >
+            <ButtonWithSpinner loading={loading} type="submit" variant="green">
                 {loading ? "Kaydediliyor..." : "Şifreyi Güncelle"}
-            </button>
+            </ButtonWithSpinner>
 
             {message && (
                 <div className="mt-2 text-sm text-center">
@@ -85,6 +78,15 @@ export default function ResetPasswordPage() {
                     </p>
                 </div>
             )}
+
+            {/* ReCAPTCHA */}
+            <div className="flex justify-center">
+                <ReCAPTCHA
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    size="invisible"
+                    ref={recaptchaRef}
+                />
+            </div>
         </form>
     );
 }
