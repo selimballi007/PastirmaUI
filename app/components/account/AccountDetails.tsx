@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { logoutApi } from "@/app/lib/api/auth";
 import { logout } from "@/store/slices/authSlice";
-import { User } from "@/types";
+import { User } from "@/app/lib/definitions";
 import { IoMdExit } from 'react-icons/io'
 
 interface AccountDetailsProps {
