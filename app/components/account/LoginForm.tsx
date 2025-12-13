@@ -1,206 +1,258 @@
 "use client";
 
-import { useState, useRef } from "react";
-import axios from "axios";
-import ReCAPTCHA from "react-google-recaptcha";
-import { useRouter } from 'next/navigation';
+import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/slices/authSlice";
-import api from "@/api/axios";
-import ButtonWithSpinner from "../ButtonWithSpinner"
+import { loginAction, resendVerificationAction, type ActionState } from "@/app/lib/api/auth";
+import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
+import type ReCAPTCHAComponent from "react-google-recaptcha";
+import { useAuthStore } from '@/app/lib/store/authStore';
+
+// Lazy load ReCAPTCHA
+const ReCAPTCHA = dynamic(() =>
+    import("react-google-recaptcha").then((mod) => {
+        return mod.default;
+    }), {
+    ssr: false,
+    loading: () => <div className="h-[78px] w-full animate-pulse bg-gray-100 rounded" />
+}
+) as React.ComponentType<React.ComponentProps<typeof ReCAPTCHAComponent> & {
+    ref?: React.Ref<ReCAPTCHAComponent>;
+}>;
+
+const RECAPTCHA_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+
+const initialState: ActionState = {
+    success: false,
+};
 
 export default function LoginForm() {
-    const recaptchaRef = useRef<ReCAPTCHA>(null);
-
     const router = useRouter();
-    const dispatch = useDispatch();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [messages, setMessages] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [showResend, setShowResend] = useState(false);
+    const recaptchaRef = useRef<ReCAPTCHAComponent>(null);
+    const formRef = useRef<HTMLFormElement>(null);
+    const { login } = useAuthStore();
 
-    const validate = () => {
-        const errs: string[] = [];
+    // useActionState for login
+    const [loginState, loginFormAction, isLoginPending] = useActionState(
+        loginAction,
+        initialState
+    );
 
-        if (!email) errs.push("Email boş olamaz.");
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-            errs.push("Geçerli bir email giriniz.");
+    // useActionState for resend
+    const [resendState, resendFormAction, isResendPending] = useActionState(
+        resendVerificationAction,
+        initialState
+    );
 
-        if (!password) errs.push("Şifre boş olamaz.");
-        else if (password.length < 6) errs.push("Şifre en az 6 karakter olmalı.");
+    // Handle successful login
+    useEffect(() => {
+        if (loginState?.success && loginState.accessToken && loginState.user) {
 
-        return errs;
-    };
+            login(loginState.accessToken, loginState.user);
 
-    const handleResend = async () => {
-        const resendErrors: string[] = [];
-
-        if (!email)
-            resendErrors.push("Email boş olamaz.");
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-            resendErrors.push("Geçerli bir email giriniz.");
-
-        if (resendErrors.length > 0) {
-            setMessages(resendErrors);
-            return;
-        }
-
-        setLoading(true);
-        try {
-            if (recaptchaRef.current) {
-                const captoken = await recaptchaRef.current.executeAsync();
-                recaptchaRef.current.reset();
-
-                await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/resend-verification-bye",
-                    { Email: email, captchaToken: captoken },
-                    { withCredentials: true }
-                );
-
-                setMessages(["✅ Yeni doğrulama maili gönderildi. Gelen kutunuzu kontrol edin."]);
-                setShowResend(false);
-            }
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                setMessages(err.response?.data?.message || "❌ Mail gönderilemedi.");
-            } else {
-                setMessages(["❌ Beklenmeyen bir hata oluştu."]);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setMessages([]);
-
-        const errs = validate();
-        if (errs.length > 0) {
-            setMessages(errs);
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            if (recaptchaRef.current) {
-                const captoken = await recaptchaRef.current.executeAsync();
-                recaptchaRef.current.reset();
-
-                const res = await api.post("user/login", {
-                    Email: email,
-                    PasswordHash: password,
-                    captchaToken: captoken,
-                });
-                dispatch(setCredentials({ accessToken: res.data.accessToken, user: res.data.user }));
-
-                setMessages(["✅ Kayıt başarılı! Giriş yapabilirsiniz."]);
-                setEmail("");
-                setPassword("");
-            }
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                if (err.response?.data?.errors) {
-                    const backendErrs = Object.values(err.response.data.errors).flat() as string[];
-                    if (err.response.status === 504) {
-                        setShowResend(true);
+            // ✅ localStorage'ı kontrol et
+            setTimeout(() => {
+                const state = useAuthStore.getState();
+                if (state.accessToken) {
+                    // ✅ Role kontrolü
+                    if (state.user?.role === 'Admin') {
+                        router.push('/dashboard');
+                    } else {
+                        router.push('/');
                     }
-                    setMessages(backendErrs);
                 } else {
-                    setMessages([err.response?.data?.message || "❌ Bir hata oluştu."]);
+                    console.error('❌ LOGINFORM Token not set, not navigating!');
                 }
-            } else {
-                setMessages(["❌ Beklenmeyen bir hata oluştu."]);
-            }
-        } finally {
-            setLoading(false);
+            }, 1500);
         }
-    };
+    }, [loginState, router, login]);
+
+    // Handle successful resend
+    useEffect(() => {
+        if (resendState.success) {
+            formRef.current?.reset();
+        }
+    }, [resendState]);
+
+    // Get captcha token
+    const getCaptchaToken = useCallback(async (): Promise<string | null> => {
+        if (!recaptchaRef.current) return null;
+
+        try {
+            const token = await recaptchaRef.current.executeAsync();
+            recaptchaRef.current.reset();
+            return token;
+        } catch (error) {
+            return null;
+        }
+    }, []);
+
+    // Handle login submit
+    const handleLoginSubmit = useCallback(async (formData: FormData) => {
+        const token = await getCaptchaToken();
+        if (!token) return;
+
+        formData.append('captchaToken', token);
+        startTransition(() => {
+            loginFormAction(formData);
+        });
+    }, [getCaptchaToken, loginFormAction]);
+
+    // Handle resend submit
+    const handleResendSubmit = useCallback(async (formData: FormData) => {
+        const token = await getCaptchaToken();
+        if (!token) return;
+
+        formData.append('captchaToken', token);
+        startTransition(() => {
+            resendFormAction(formData);
+        });
+    }, [getCaptchaToken, resendFormAction]);
+
+    const isPending = isLoginPending || isResendPending;
+    const currentState = loginState.showResend ? resendState : loginState;
+    const showResendButton = loginState.showResend;
 
     return (
-        <>
+        <div className="w-full max-w-md">
             <form
-                onSubmit={handleSubmit}
-                className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg space-y-4 sm:space-y-6"
+                ref={formRef}
+                action={showResendButton ? handleResendSubmit : handleLoginSubmit}
+                className="bg-white shadow-xl rounded-lg p-6 space-y-6"
             >
-                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Giriş Yap</h2>
+                <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">
+                    Giriş Yap
+                </h2>
 
-                {/* Inputs */}
-                <div className="space-y-3">
+                {/* Email Input */}
+                <div className="space-y-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
                     <input
-                        type="text"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
                         required
+                        disabled={isPending}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="ornek@email.com"
+                        aria-describedby={currentState.errors?.email ? "email-error" : undefined}
                     />
-                    <input
-                        type="password"
-                        placeholder="Şifre"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                        required
-                    />
+                    {currentState.errors?.email && (
+                        <p id="email-error" className="text-sm text-red-600" role="alert">
+                            {currentState.errors.email[0]}
+                        </p>
+                    )}
                 </div>
 
-                {/* Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {showResend ? (
+                {/* Password Input - Hidden for resend */}
+                {!showResendButton && (
+                    <div className="space-y-2">
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            Şifre
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                            disabled={isPending}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="••••••••"
+                            aria-describedby={currentState.errors?.password ? "password-error" : undefined}
+                        />
+                        {currentState.errors?.password && (
+                            <p id="password-error" className="text-sm text-red-600" role="alert">
+                                {currentState.errors.password[0]}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Submit Button */}
+                <div className="pt-2">
+                    {showResendButton ? (
                         <ButtonWithSpinner
-                            loading={loading}
-                            onClick={handleResend}
+                            loading={isPending}
+                            type="submit"
                             variant="blue"
+                            className="w-full"
                         >
                             Yeniden Doğrulama Maili Gönder
                         </ButtonWithSpinner>
                     ) : (
-                        <ButtonWithSpinner loading={loading} type="submit" variant="green">
-                            {loading ? "Kaydediliyor..." : "Giriş Yap"}
+                        <ButtonWithSpinner
+                            loading={isPending}
+                            type="submit"
+                            variant="green"
+                            className="w-full"
+                        >
+                            {isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
                         </ButtonWithSpinner>
                     )}
                 </div>
 
-                {/* Forgot-Password Link */}
-                <div className="flex justify-start mb-2">
-                    <Link
-                        href="/account/forgot-password"
-                        className="text-sm text-blue-600 hover:underline"
-                    >
-                        Şifremi Unuttum?
-                    </Link>
-                </div>
+                {/* Forgot Password Link */}
+                {!showResendButton && (
+                    <div className="flex justify-between items-center text-sm">
+                        <Link
+                            href="/account/forgot-password"
+                            className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+                            prefetch={false}
+                        >
+                            Şifremi Unuttum?
+                        </Link>
+                    </div>
+                )}
 
                 {/* Messages */}
-                {messages.length > 0 && (
-                    <div className="mt-4 text-center space-y-1">
-                        {messages.map((msg, i) => (
-                            <p
-                                key={i}
-                                className={`text-sm px-3 py-1 rounded ${msg.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                    }`}
-                            >
-                                {msg}
-                            </p>
-                        ))}
+                {currentState.message && (
+                    <div
+                        className={`p-4 rounded-lg ${currentState.success
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                            }`}
+                        role="alert"
+                        aria-live="polite"
+                    >
+                        <p className="text-sm font-medium">{currentState.message}</p>
+                    </div>
+                )}
+
+                {/* General Errors */}
+                {currentState.errors && !currentState.errors.email && !currentState.errors.password && (
+                    <div className="bg-red-50 text-red-800 border border-red-200 p-4 rounded-lg" role="alert">
+                        <p className="text-sm font-medium">
+                            {Object.values(currentState.errors).flat()[0]}
+                        </p>
                     </div>
                 )}
 
                 {/* ReCAPTCHA */}
                 <div className="flex justify-center">
                     <ReCAPTCHA
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        sitekey={RECAPTCHA_KEY}
                         size="invisible"
                         ref={recaptchaRef}
                     />
                 </div>
-            </form>
 
-        </>
+                {/* Sign Up Link */}
+                <div className="text-center text-sm text-gray-600">
+                    Hesabınız yok mu?{" "}
+                    <Link
+                        href="/account/register"
+                        className="text-blue-600 hover:text-blue-800 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+                        prefetch={false}
+                    >
+                        Kayıt Ol
+                    </Link>
+                </div>
+            </form>
+        </div>
     );
 }
-

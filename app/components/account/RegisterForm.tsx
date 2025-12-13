@@ -1,172 +1,246 @@
 "use client";
 
-import { useState, useRef } from "react";
-import axios from "axios";
-import ButtonWithSpinner from "../ButtonWithSpinner"
-import ReCAPTCHA from "react-google-recaptcha";
+import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import type ReCAPTCHAComponent from "react-google-recaptcha";
+import { registerAction, type ActionState } from "@/app/lib/api/auth";
+import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
 
-export default function RegisterForm() {
-    const recaptchaRef = useRef<ReCAPTCHA>(null);
+// ✅ Lazy load ReCAPTCHA - Bundle size optimizasyonu
+const ReCAPTCHA = dynamic(() =>
+    import("react-google-recaptcha").then((mod) => {
+        return mod.default;
+    }), {
+    ssr: false,
+    loading: () => <div className="h-[78px] w-full animate-pulse bg-gray-100 rounded" />
+}
+) as React.ComponentType<React.ComponentProps<typeof ReCAPTCHAComponent> & {
+    ref?: React.Ref<ReCAPTCHAComponent>;
+}>;
 
-    const [username, setUserName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [messages, setMessages] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
+const RECAPTCHA_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 
-    const validate = () => {
-        const errs: string[] = [];
+const initialState: ActionState = {
+    success: false,
+};
 
-        // Email Control
-        if (!email) {
-            errs.push("Email boş olamaz.");
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            errs.push("Geçerli bir email giriniz.");
+export default function RegisterFormClient() {
+    const router = useRouter();
+    const recaptchaRef = useRef<ReCAPTCHAComponent>(null);
+    const formRef = useRef<HTMLFormElement>(null);
+
+    // ✅ useActionState - Redux yerine
+    const [state, formAction, isPending] = useActionState(
+        registerAction,
+        initialState
+    );
+
+    // ✅ Başarılı kayıt sonrası yönlendirme
+    useEffect(() => {
+        if (state.success) {
+            // Form'u temizle
+            formRef.current?.reset();
+
+            // 3 saniye sonra login sayfasına yönlendir
+            const timeout = setTimeout(() => {
+                router.push('/account/login');
+            }, 3000);
+
+            return () => clearTimeout(timeout);
         }
+    }, [state.success, router]);
 
-        // UserName Control
-        if (!username) {
-            errs.push("Kullanıcı adı boş olamaz.");
-        } else if (username.length < 3) {
-            errs.push("Kullanıcı adı en az 3 karakter olmalı.");
-        }
-
-        // Password Control
-        if (!password) {
-            errs.push("Şifre boş olamaz.");
-        } else if (password.length < 6) {
-            errs.push("Şifre en az 6 karakter olmalı.");
-        }
-
-        return errs;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setMessages([]);
-
-        const errs = validate();
-        if (errs.length > 0) {
-            setMessages(errs);
-            return;
-        }
-
-        setLoading(true);
+    // ✅ Get captcha token - useCallback ile memoize
+    const getCaptchaToken = useCallback(async (): Promise<string | null> => {
+        if (!recaptchaRef.current) return null;
 
         try {
-            if (recaptchaRef.current) {
-                const captoken = await recaptchaRef.current.executeAsync();
-                recaptchaRef.current.reset();
-
-                await axios.post(process.env.NEXT_PUBLIC_API_URL + "user/register", {
-                    Email: email,
-                    UserName: username,
-                    PasswordHash: password,
-                    captchaToken: captoken
-                });
-
-                setMessages(["✅ Hesabınızı email adresinize gönderilen linkten aktifleştirebilirsiniz. Gelen klasöründe yoksa Spam klasörünü kontrol ediniz."]);
-                setEmail("");
-                setUserName("");
-                setPassword("");
-            }
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                if (err.response?.data?.errors) {
-                    const errorArray = Object.values(err.response.data.errors).flat() as string[];
-                    setMessages(errorArray);
-                } else {
-                    setMessages([err.response?.data?.message || "❌ Bir hata oluştu."]);
-                }
-            } else {
-                setMessages(["❌ Beklenmeyen bir hata oluştu."]);
-            }
-        } finally {
-            setLoading(false);
+            const token = await recaptchaRef.current.executeAsync();
+            recaptchaRef.current.reset();
+            return token;
+        } catch (error) {
+            console.error('ReCAPTCHA error:', error);
+            return null;
         }
-    };
+    }, []);
+
+    // ✅ Handle submit - useCallback ile memoize
+    const handleSubmit = useCallback(async (formData: FormData) => {
+        const token = await getCaptchaToken();
+        if (!token) return;
+
+        formData.append('captchaToken', token);
+        startTransition(() => {
+            formAction(formData);
+        });
+    }, [getCaptchaToken, formAction]);
 
     return (
-        <>
+        <div className="w-full max-w-md">
             <form
-                onSubmit={handleSubmit}
-                className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg space-y-4 sm:space-y-6"
+                ref={formRef}
+                action={handleSubmit}
+                className="bg-white shadow-xl rounded-lg p-6 space-y-6"
             >
-                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Kayıt Ol</h2>
+                <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">
+                    Kayıt Ol
+                </h2>
 
-                {/* Inputlar */}
-                <div className="space-y-3">
+                {/* Username Input */}
+                <div className="space-y-2">
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                        Kullanıcı Adı
+                    </label>
                     <input
+                        id="username"
+                        name="username"
                         type="text"
-                        placeholder="Kullanıcı Adı"
-                        value={username}
-                        onChange={(e) => setUserName(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        autoComplete="username"
                         required
+                        disabled={isPending}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="kullaniciadi"
+                        minLength={3}
+                        maxLength={50}
+                        aria-describedby={state.errors?.username ? "username-error" : undefined}
                     />
-
-                    <input
-                        type="text"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                        required
-                    />
-
-                    <input
-                        type="password"
-                        placeholder="Parola"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                        required
-                    />
+                    {state.errors?.username && (
+                        <p id="username-error" className="text-sm text-red-600" role="alert">
+                            {state.errors.username[0]}
+                        </p>
+                    )}
                 </div>
 
-                {/* Information */}
-                <p className="text-sm text-gray-700">
-                    Hesap oluşturmanız için e-posta adresinize bir bağlantı gönderilecek.
-                    Gönderiler klasöründe bulamazsanız Spam klasörünü kontrol ediniz.<br />
-                    Kişisel verileriniz, bu web sitesindeki deneyiminizi desteklemek, hesabınıza erişimi yönetmek ve
-                    aşağıda açıklanan diğer amaçlar için kullanılacaktır.{" "}
-                    <span className="underline cursor-pointer">Gizlilik İlkesi</span>.
-                </p>
+                {/* Email Input */}
+                <div className="space-y-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        disabled={isPending}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="ornek@email.com"
+                        aria-describedby={state.errors?.email ? "email-error" : undefined}
+                    />
+                    {state.errors?.email && (
+                        <p id="email-error" className="text-sm text-red-600" role="alert">
+                            {state.errors.email[0]}
+                        </p>
+                    )}
+                </div>
 
-                {/* Register Button */}
-                <ButtonWithSpinner
-                    loading={loading}
-                    type="submit"
-                    variant="green"
-                >
-                    {loading ? "Kaydediliyor..." : "Kayıt Ol"}
-                </ButtonWithSpinner>
+                {/* Password Input */}
+                <div className="space-y-2">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                        Şifre
+                    </label>
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        disabled={isPending}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="••••••••"
+                        minLength={6}
+                        maxLength={100}
+                        aria-describedby={state.errors?.password ? "password-error" : undefined}
+                    />
+                    {state.errors?.password && (
+                        <p id="password-error" className="text-sm text-red-600" role="alert">
+                            {state.errors.password[0]}
+                        </p>
+                    )}
+                </div>
+
+                {/* Privacy Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                        Hesap oluşturmanız için e-posta adresinize bir bağlantı gönderilecek.
+                        Gönderiler klasöründe bulamazsanız Spam klasörünü kontrol ediniz.
+                    </p>
+                    <p className="text-sm text-gray-700 mt-3 leading-relaxed">
+                        Kişisel verileriniz, bu web sitesindeki deneyiminizi desteklemek, hesabınıza erişimi yönetmek ve
+                        aşağıda açıklanan diğer amaçlar için kullanılacaktır.{" "}
+                        <Link
+                            href="/privacy-policy"
+                            className="text-blue-600 hover:text-blue-800 underline font-medium"
+                            prefetch={false}
+                        >
+                            Gizlilik İlkesi
+                        </Link>.
+                    </p>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-2">
+                    <ButtonWithSpinner
+                        loading={isPending}
+                        type="submit"
+                        variant="green"
+                        className="w-full"
+                    >
+                        {isPending ? "Kaydediliyor..." : "Kayıt Ol"}
+                    </ButtonWithSpinner>
+                </div>
 
                 {/* Messages */}
-                {messages.length > 0 && (
-                    <div className="mt-4 text-center space-y-1">
-                        {messages.map((msg, i) => (
-                            <p
-                                key={i}
-                                className={`text-sm px-3 py-1 rounded ${msg.startsWith("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                    }`}
-                            >
-                                {msg}
+                {state.message && (
+                    <div
+                        className={`p-4 rounded-lg ${state.success
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                            }`}
+                        role="alert"
+                        aria-live="polite"
+                    >
+                        <p className="text-sm font-medium">{state.message}</p>
+                        {state.success && (
+                            <p className="text-xs mt-2 text-green-600">
+                                3 saniye içinde giriş sayfasına yönlendirileceksiniz...
                             </p>
-                        ))}
+                        )}
+                    </div>
+                )}
+
+                {/* General Errors */}
+                {state.errors && !state.errors.username && !state.errors.email && !state.errors.password && (
+                    <div className="bg-red-50 text-red-800 border border-red-200 p-4 rounded-lg" role="alert">
+                        <p className="text-sm font-medium">
+                            {Object.values(state.errors).flat()[0]}
+                        </p>
                     </div>
                 )}
 
                 {/* ReCAPTCHA */}
                 <div className="flex justify-center">
                     <ReCAPTCHA
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        sitekey={RECAPTCHA_KEY}
                         size="invisible"
                         ref={recaptchaRef}
                     />
                 </div>
-            </form>
 
-        </>
+                {/* Login Link */}
+                <div className="text-center text-sm text-gray-600 pt-4 border-t border-gray-200">
+                    Zaten hesabınız var mı?{" "}
+                    <Link
+                        href="/account/login"
+                        className="text-blue-600 hover:text-blue-800 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+                        prefetch={false}
+                    >
+                        Giriş Yap
+                    </Link>
+                </div>
+            </form>
+        </div>
     );
 }

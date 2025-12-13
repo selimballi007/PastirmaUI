@@ -1,4 +1,8 @@
 'use client'
+
+import '../globals.css'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 import { Metadata } from 'next'
 
 const metadata: Metadata = {
@@ -11,10 +15,12 @@ const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
-      <body >
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
+      <Navbar />
+      <main className="flex-1">
         {children}
-      </body>
-    </html>
+      </main>
+      <Footer />
+    </div>
   )
 }

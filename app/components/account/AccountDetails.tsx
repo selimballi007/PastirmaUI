@@ -1,29 +1,22 @@
 "use client";
-
-import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { logoutApi } from "@/app/lib/api/auth";
-import { logout } from "@/store/slices/authSlice";
-import { User } from "@/app/lib/definitions";
 import { IoMdExit } from 'react-icons/io'
+import { useAuthStore } from '@/app/lib/store/authStore';
 
-interface AccountDetailsProps {
-    user: User
-}
-
-export default function AccountDetails({ user }: AccountDetailsProps) {
-    const dispatch = useDispatch();
+export default function AccountDetails() {
     const router = useRouter();
 
     const handleLogout = async () => {
         try {
-            await logoutApi();
-            dispatch(logout());
+            //await logoutApi();
+            //dispatch(logout());
             router.push("/");
         } catch (error) {
             console.error("Logout failed", error);
         }
     };
+
+    const user = useAuthStore((state) => state.user);
 
     return (
         <div className="flex items-center justify-between mb-6">
@@ -32,7 +25,7 @@ export default function AccountDetails({ user }: AccountDetailsProps) {
                 <h1 className="text-3xl font-bold">Hesabım</h1>
                 <p className="mt-1 text-gray-700">
                     Hoş geldiniz,{" "}
-                    <span className="font-semibold">{user.username}</span>!
+                    <span className="font-semibold">{user?.username}</span>!
                 </p>
             </div>
 
@@ -49,15 +42,6 @@ export default function AccountDetails({ user }: AccountDetailsProps) {
                         Çıkış Yap
                     </span>
                 </button>
-                <p className="text-xs text-gray-500">
-                    Son giriş:{" "}
-                    <span className="font-semibold text-gray-700">
-                        {new Date(user.lastLoginAt).toLocaleString("tr-TR", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                        })}
-                    </span>
-                </p>
             </div>
         </div>
     );
