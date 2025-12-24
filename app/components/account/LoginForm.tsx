@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useCallback, startTransition } from 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loginAction, resendVerificationAction, type ActionState } from "@/app/lib/api/auth";
+import { loginAction, resendVerificationAction, type ActionState } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
 import type ReCAPTCHAComponent from "react-google-recaptcha";
 import { useAuthStore } from '@/app/lib/store/authStore';

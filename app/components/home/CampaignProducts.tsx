@@ -1,36 +1,15 @@
 // components/home/CampaignProducts.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
 import ProductCard from '@/app/components/product/ProductCard';
-import { productService } from '@/app/lib/services/productService';
 import { Package, Sparkles } from 'lucide-react';
 import type { Product } from '@/app/types/dashboard';
 
-export default function CampaignProducts() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+interface CampaignProductsProps {
+    products: Product[];
+}
 
-    useEffect(() => {
-        fetchCampaignProducts();
-    }, []);
-
-    const fetchCampaignProducts = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            // ✅ Backend'den kampanyalı ürünleri al
-            const result = await productService.getProducts({ isCampaign: true, limit: 3 }); // 3 adet
-            setProducts(result);
-        } catch (err) {
-            console.error('Error fetching campaign products:', err);
-            setError('Kampanyalı ürünler yüklenirken bir hata oluştu.');
-        } finally {
-            setLoading(false);
-        }
-    };
+export default function CampaignProducts({ products }: CampaignProductsProps) {
 
     const handleAddToCart = (productId: number) => {
         // TODO: Cart store'a ekle
@@ -50,42 +29,6 @@ export default function CampaignProducts() {
         }
         return 0;
     };
-
-    if (loading) {
-        return (
-            <section className="py-16 bg-gradient-to-br from-orange-50 to-amber-50">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                            Kampanyalı Ürünler
-                        </h2>
-                        <p className="text-gray-600">Kaçırılmayacak fırsatlar</p>
-                    </div>
-                    <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
-    if (error) {
-        return (
-            <section className="py-16 bg-gradient-to-br from-orange-50 to-amber-50">
-                <div className="container mx-auto px-4">
-                    <div className="text-center py-12">
-                        <p className="text-red-600">{error}</p>
-                        <button
-                            onClick={fetchCampaignProducts}
-                            className="mt-4 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                        >
-                            Tekrar Dene
-                        </button>
-                    </div>
-                </div>
-            </section>
-        );
-    }
 
     if (products.length === 0) {
         return (

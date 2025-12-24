@@ -2,15 +2,16 @@
 import { useRouter } from "next/navigation";
 import { IoMdExit } from 'react-icons/io'
 import { useAuthStore } from '@/app/lib/store/authStore';
+import { useAuthActions } from '@/app/lib/hooks';
 
 export default function AccountDetails() {
     const router = useRouter();
+    const { logOut } = useAuthActions();
 
     const handleLogout = async () => {
         try {
-            //await logoutApi();
-            //dispatch(logout());
-            router.push("/");
+            // ✅ Proper logout with server cleanup
+            await logOut();
         } catch (error) {
             console.error("Logout failed", error);
         }

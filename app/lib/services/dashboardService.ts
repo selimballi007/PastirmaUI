@@ -1,7 +1,7 @@
 // services/dashboardService.ts
 'use client';
 
-import { fetchAPI } from '@/app/lib/api/hooks';
+import { fetchAPI } from '@/app/lib/api/client';
 import type { DashboardResponse, Order, PaginatedResponse } from '@/app/types/dashboard';
 
 // Dashboard API fonksiyonları

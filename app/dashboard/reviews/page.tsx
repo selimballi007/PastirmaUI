@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchAPI } from '@/app/lib/api/hooks';
+import { fetchAPI } from '@/app/lib/api/client';
 import {
     Star,
     Check,

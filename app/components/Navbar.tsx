@@ -9,7 +9,7 @@ import { MdLogout, MdDashboard } from 'react-icons/md'
 import { useAuthStore } from '@/app/lib/store/authStore'
 import { Heart } from 'lucide-react'
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore'
-import { useAuthActions } from '@/app/lib/api/hooks'
+import { useAuthActions } from '@/app/lib/hooks'
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)

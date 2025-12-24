@@ -1,5 +1,5 @@
 // app/lib/services/favoriteService.ts
-import { fetchAPI } from '@/app/lib/api/hooks'
+import { fetchAPI } from '@/app/lib/api/client'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 export interface FavoriteProduct {

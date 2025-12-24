@@ -1,7 +1,7 @@
 // services/productService.ts
 'use client';
 
-import { fetchAPI } from '@/app/lib/api/hooks';
+import { fetchAPI } from '@/app/lib/api/client';
 import type {
     Product,
     CreateProductRequest,

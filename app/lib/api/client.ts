@@ -1,7 +1,8 @@
-// lib/api/client.ts
+// lib/api/client.ts - Client-side API client with auth
 'use client';
 
 import { useAuthStore } from '@/app/lib/store/authStore';
+import { parseFetchResponse, buildApiUrl } from '@/app/lib/utils/fetch';
 
 let refreshPromise: Promise<{ accessToken: string; user: any } | null> | null = null;
 
@@ -130,4 +131,62 @@ export async function apiCall(
     }
 
     return response;
+}
+
+/**
+ * High-level fetch API for client-side requests with auth
+ * Uses apiCall internally for automatic token refresh
+ */
+export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const url = buildApiUrl(endpoint);
+
+    console.log('[fetchAPI] Fetching:', url);
+
+    const response = await apiCall(url, options);
+    return parseFetchResponse<T>(response);
+}
+
+/**
+ * Fetch hook for test token (legacy support)
+ * @deprecated Use fetchAPI instead
+ */
+export function useFetchForTestToken() {
+    return async (endpoint: string, options?: RequestInit) => {
+        const url = buildApiUrl(endpoint);
+        const response = await apiCall(url, options);
+
+        console.log('[useFetch] Got response, status:', response.status);
+
+        if (!response.ok) {
+            console.error('[useFetch] Response not ok');
+            const error = await response.json().catch(() => ({
+                message: 'Unknown error',
+            }));
+            console.error('[useFetch] Error data:', error);
+            throw new Error(error.message || 'API call failed');
+        }
+
+        // Handle empty responses
+        const contentType = response.headers.get('content-type');
+
+        if (!contentType || !contentType.includes('application/json')) {
+            console.log('[useFetch] No JSON content, returning empty response');
+            return { status: response.status, ok: true };
+        }
+
+        try {
+            const text = await response.text();
+            if (!text) {
+                console.log('[useFetch] Empty response body');
+                return { status: response.status, ok: true };
+            }
+
+            const data = JSON.parse(text);
+            console.log('[useFetch] Returning data:', data);
+            return data;
+        } catch (error) {
+            console.error('[useFetch] JSON parse error:', error);
+            return { status: response.status, ok: true };
+        }
+    };
 }

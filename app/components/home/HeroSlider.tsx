@@ -4,41 +4,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Percent, ArrowRight } from 'lucide-react';
+import type { HeroSlide } from '@/app/lib/server/homepage';
 
-const heroSlides = [
-    {
-        id: 1,
-        title: 'Özel Olgunlaştırılmış Pastırma',
-        subtitle: 'Geleneksel lezzetin modern hali',
-        description: '45 günlük özel çemeni kaplı pastırmalarımızda %30 indirim!',
-        discount: '30% İndirim',
-        image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1200',
-        buttonText: 'Hemen Keşfet',
-        bgColor: 'from-amber-600 to-orange-700',
-    },
-    {
-        id: 2,
-        title: 'Premium Sucuk Çeşitleri',
-        subtitle: 'Kahvaltının vazgeçilmezi',
-        description: 'El yapımı sucuklarımızda 2 al 1 öde kampanyası!',
-        discount: '2 Al 1 Öde',
-        image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1200',
-        buttonText: 'Kampanyayı Gör',
-        bgColor: 'from-emerald-600 to-teal-700',
-    },
-    {
-        id: 3,
-        title: 'Taze Kasap Ürünleri',
-        subtitle: 'Günlük taze, hijyenik',
-        description: 'Kuzu etinden kavurma ve döş mantı özel fiyatlarla!',
-        discount: 'Özel Fiyat',
-        image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1200',
-        buttonText: 'Ürünleri İncele',
-        bgColor: 'from-blue-600 to-indigo-700',
-    },
-];
+interface HeroSliderProps {
+    slides: HeroSlide[];
+}
 
-export default function HeroSlider() {
+export default function HeroSlider({ slides }: HeroSliderProps) {
+    const heroSlides = slides;
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAutoPlay, setIsAutoPlay] = useState(true);
 

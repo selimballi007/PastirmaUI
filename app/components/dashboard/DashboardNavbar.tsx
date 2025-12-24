@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Menu, Search, Bell, ChevronDown, } from 'lucide-react'
 import Link from 'next/link'
-import { useAuthActions } from '@/app/lib/api/hooks'
+import { useAuthActions } from '@/app/lib/hooks'
 
 interface DashboardNavbarProps {
     setSidebarOpen: (open: boolean) => void

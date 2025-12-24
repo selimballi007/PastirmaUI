@@ -1,50 +1,13 @@
 // components/home/Testimonials.tsx
 import { Star, Clock, Award } from 'lucide-react';
+import type { Testimonial, TestimonialStat } from '@/app/lib/server/homepage';
 
-const testimonials = [
-    {
-        id: 1,
-        name: 'Ahmet Yılmaz',
-        location: 'İstanbul',
-        rating: 5,
-        comment: 'Pastırmanın tadı gerçekten muhteşem! 20 yıldır pastırma yiyorum ama böylesini ilk defa tattım. Ailece favorimiz oldu.',
-        date: '2 gün önce',
-        verified: true,
-        avatar: '👨',
-        bgColor: 'from-blue-400 to-blue-600',
-    },
-    {
-        id: 2,
-        name: 'Ayşe Demir',
-        location: 'Ankara',
-        rating: 5,
-        comment: 'Sucuklar çok taze ve lezzetli. Kargo da hızlı geldi, soğuk zincir bozulmamış. Teşekkürler!',
-        date: '5 gün önce',
-        verified: true,
-        avatar: '👩',
-        bgColor: 'from-emerald-400 to-emerald-600',
-    },
-    {
-        id: 3,
-        name: 'Mehmet Kaya',
-        location: 'İzmir',
-        rating: 4,
-        comment: 'Kavurma kalitesi çok iyi. Fiyatlar biraz yüksek ama kaliteye değiyor. Tekrar sipariş vereceğim.',
-        date: '1 hafta önce',
-        verified: true,
-        avatar: '👨‍🦱',
-        bgColor: 'from-purple-400 to-purple-600',
-    },
-];
+interface TestimonialsProps {
+    testimonials: Testimonial[];
+    stats: TestimonialStat[];
+}
 
-const stats = [
-    { value: '50K+', label: 'Mutlu Müşteri', color: 'text-indigo-600' },
-    { value: '4.9', label: 'Ortalama Puan', color: 'text-emerald-600' },
-    { value: '15K+', label: 'Ürün Yorumu', color: 'text-purple-600' },
-    { value: '99%', label: 'Tavsiye Oranı', color: 'text-amber-600' },
-];
-
-export default function Testimonials() {
+export default function Testimonials({ testimonials, stats }: TestimonialsProps) {
     return (
         <section className="py-12 bg-gradient-to-br from-indigo-50 to-purple-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

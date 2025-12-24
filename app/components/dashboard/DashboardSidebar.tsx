@@ -3,7 +3,7 @@
 import { LogOut, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthActions } from '@/app/lib/api/hooks'
+import { useAuthActions } from '@/app/lib/hooks'
 
 interface DashboardSidebarProps {
     sidebarOpen: boolean;

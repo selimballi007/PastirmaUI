@@ -1,19 +1,13 @@
 // components/home/Categories.tsx
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import type { Category } from '@/app/lib/server/homepage';
 
-const categories = [
-    { name: 'Pastırma', icon: '🥩', count: 24, color: 'bg-orange-100 text-orange-700 hover:bg-orange-200' },
-    { name: 'Sucuk', icon: '🌭', count: 18, color: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' },
-    { name: 'Kavurma', icon: '🍖', count: 12, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
-    { name: 'Salam', icon: '🥓', count: 15, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
-    { name: 'Sosis', icon: '🌭', count: 10, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200' },
-    { name: 'Jambon', icon: '🍗', count: 8, color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' },
-    { name: 'Şarküteri', icon: '🧈', count: 20, color: 'bg-teal-100 text-teal-700 hover:bg-teal-200' },
-    { name: 'Kahvaltılık', icon: '🥖', count: 16, color: 'bg-amber-100 text-amber-700 hover:bg-amber-200' },
-];
+interface CategoriesProps {
+    categories: Category[];
+}
 
-export default function Categories() {
+export default function Categories({ categories }: CategoriesProps) {
     return (
         <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
