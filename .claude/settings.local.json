@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(dotnet ef migrations add:*)",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

@@ -12,31 +12,27 @@ export interface User {
 
 interface AuthStore {
     user: User | null;
-    accessToken: string | null;
     isLoading: boolean;
     error: string | null;
 
-    login: (token: string, user: User) => void;
+    login: (user: User) => void;
     logout: () => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
     updateUser: (user: Partial<User>) => void;
-    setAccessToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
     persist(
         (set, get) => ({
             user: null,
-            accessToken: null,
             isLoading: false,
             error: null,
 
-            login: (token, user) => {
+            login: (user) => {
                 console.log('🔵 [AuthStore.login] Called');
                 console.log('🔵🔴🟢', user);
                 set({
-                    accessToken: token,
                     user,
                     error: null,
                 });
@@ -46,7 +42,6 @@ export const useAuthStore = create<AuthStore>()(
             logout: () => {
                 console.log('🔴 [AuthStore.logout] Called');
                 set({
-                    accessToken: null,
                     user: null,
                     error: null,
                 });
@@ -55,11 +50,6 @@ export const useAuthStore = create<AuthStore>()(
             setLoading: (loading) => set({ isLoading: loading }),
             setError: (error) => set({ error }),
 
-            setAccessToken: (token) => {
-                console.log('🟢 [AuthStore.setAccessToken] Called');
-                set({ accessToken: token });
-            },
-
             updateUser: (userData) =>
                 set((state) => ({
                     user: state.user ? { ...state.user, ...userData } : null,
@@ -67,10 +57,9 @@ export const useAuthStore = create<AuthStore>()(
         }),
         {
             name: 'auth-store',
-            // ✅ Sadece user'ı persist et (accessToken memory'de kalır)
+            // ✅ SADECE user bilgisi persist edilir - token yok!
             partialize: (state) => ({
                 user: state.user,
-                // accessToken persist edilmez - güvenlik için
             }),
         }
     )
@@ -78,17 +67,17 @@ export const useAuthStore = create<AuthStore>()(
 
 // Selector hooks
 export const useUser = () => useAuthStore((state) => state.user);
-export const useAccessToken = () => useAuthStore((state) => state.accessToken);
 export const useAuthError = () => useAuthStore((state) => state.error);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 
+// ✅ Auth check artık sadece user varlığına bakıyor - token cookie'de
 export const useIsAuthenticated = () =>
     useAuthStore((state) => {
-        const isAuth = state.accessToken !== null && state.user !== null;
+        const isAuth = state.user !== null;
         return isAuth;
     });
 
 export const getIsAuthenticated = () => {
     const state = useAuthStore.getState();
-    return state.accessToken !== null && state.user !== null;
+    return state.user !== null;
 };

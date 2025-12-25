@@ -1,27 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginAction, resendVerificationAction, type ActionState } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
-import type ReCAPTCHAComponent from "react-google-recaptcha";
+import Turnstile, { type TurnstileHandle } from "@/app/components/Turnstile";
 import { useAuthStore } from '@/app/lib/store/authStore';
-
-// Lazy load ReCAPTCHA
-const ReCAPTCHA = dynamic(() =>
-    import("react-google-recaptcha").then((mod) => {
-        return mod.default;
-    }), {
-    ssr: false,
-    loading: () => <div className="h-[78px] w-full animate-pulse bg-gray-100 rounded" />
-}
-) as React.ComponentType<React.ComponentProps<typeof ReCAPTCHAComponent> & {
-    ref?: React.Ref<ReCAPTCHAComponent>;
-}>;
-
-const RECAPTCHA_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 
 const initialState: ActionState = {
     success: false,
@@ -29,7 +14,7 @@ const initialState: ActionState = {
 
 export default function LoginForm() {
     const router = useRouter();
-    const recaptchaRef = useRef<ReCAPTCHAComponent>(null);
+    const turnstileRef = useRef<TurnstileHandle>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const { login } = useAuthStore();
 
@@ -47,22 +32,22 @@ export default function LoginForm() {
 
     // Handle successful login
     useEffect(() => {
-        if (loginState?.success && loginState.accessToken && loginState.user) {
+        if (loginState?.success && loginState.user) {
+            // ✅ Sadece user bilgisini store'a kaydet - token cookie'de
+            login(loginState.user);
 
-            login(loginState.accessToken, loginState.user);
-
-            // ✅ localStorage'ı kontrol et
+            // ✅ User kaydedildi mi kontrol et
             setTimeout(() => {
                 const state = useAuthStore.getState();
-                if (state.accessToken) {
+                if (state.user) {
                     // ✅ Role kontrolü
-                    if (state.user?.role === 'Admin') {
+                    if (state.user.role === 'Admin') {
                         router.push('/dashboard');
                     } else {
                         router.push('/');
                     }
                 } else {
-                    console.error('❌ LOGINFORM Token not set, not navigating!');
+                    console.error('❌ LOGINFORM User not set, not navigating!');
                 }
             }, 1500);
         }
@@ -77,11 +62,11 @@ export default function LoginForm() {
 
     // Get captcha token
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
-        if (!recaptchaRef.current) return null;
+        if (!turnstileRef.current) return null;
 
         try {
-            const token = await recaptchaRef.current.executeAsync();
-            recaptchaRef.current.reset();
+            const token = await turnstileRef.current.executeAsync();
+            turnstileRef.current.reset();
             return token;
         } catch (error) {
             return null;
@@ -232,13 +217,9 @@ export default function LoginForm() {
                     </div>
                 )}
 
-                {/* ReCAPTCHA */}
+                {/* Turnstile CAPTCHA */}
                 <div className="flex justify-center">
-                    <ReCAPTCHA
-                        sitekey={RECAPTCHA_KEY}
-                        size="invisible"
-                        ref={recaptchaRef}
-                    />
+                    <Turnstile ref={turnstileRef} />
                 </div>
 
                 {/* Sign Up Link */}

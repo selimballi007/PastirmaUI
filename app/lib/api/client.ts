@@ -1,10 +1,10 @@
-// lib/api/client.ts - Client-side API client with auth
+// lib/api/client.ts - Cookie-based API client (no client-side token storage)
 'use client';
 
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { parseFetchResponse, buildApiUrl } from '@/app/lib/utils/fetch';
 
-let refreshPromise: Promise<{ accessToken: string; user: any } | null> | null = null;
+let refreshPromise: Promise<{ user: any } | null> | null = null;
 
 async function refreshAccessToken() {
     if (refreshPromise) {
@@ -17,45 +17,33 @@ async function refreshAccessToken() {
         try {
             const url = `${process.env.NEXT_PUBLIC_API_URL}user/refresh-token`;
 
-            // ✅ Store'dan accessToken al
-            const store = useAuthStore.getState();
-
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json',
-            };
-
-            // ✅ AccessToken varsa ekle
-            if (store.accessToken) {
-                headers['Authorization'] = `Bearer ${store.accessToken}`;
-                console.log('[API] Adding accessToken to refresh request');
-            }
+            // ✅ Token cookie'de - credentials: 'include' ile otomatik gönderilir
             const response = await fetch(url, {
                 method: 'POST',
-                headers,
-                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // ✅ Cookie otomatik gönderilir
             });
 
             console.log('[API] Refresh response status:', response.status);
 
             if (!response.ok) {
                 console.error('[API] Refresh failed with status:', response.status);
-
-                // ✅ Logout ama redirect YAPMA (guest mode'a dön)
                 useAuthStore.getState().logout();
-
                 return null;
             }
 
             const data = await response.json();
             console.log('[API] Refresh successful');
 
-            useAuthStore.getState().login(data.accessToken, data.user);
+            // ✅ Sadece user bilgisini güncelle - token cookie'de
+            useAuthStore.getState().login(data.user);
 
-            return { accessToken: data.accessToken, user: data.user };
+            return { user: data.user };
         } catch (error) {
             console.error('[API] Token refresh error:', error);
             useAuthStore.getState().logout();
-
             return null;
         } finally {
             refreshPromise = null;
@@ -74,8 +62,8 @@ export async function apiCall(
     console.log('[API] Request:', {
         url,
         method: options.method || 'GET',
-        hasAccessToken: !!store.accessToken,
-        mode: store.accessToken ? 'authenticated' : 'guest',
+        hasUser: !!store.user,
+        mode: store.user ? 'authenticated' : 'guest',
     });
 
     const headers = new Headers({
@@ -83,38 +71,30 @@ export async function apiCall(
         ...options.headers,
     });
 
-    // ✅ Token varsa ekle, yoksa guest mode
-    if (store.accessToken) {
-        headers.set('Authorization', `Bearer ${store.accessToken}`);
-        console.log('[API] Authorization header set');
-        console.log('Headers:', Object.fromEntries(headers.entries()));
-        console.log('URL:', url);
-    } else {
-        console.log('[API] Guest mode - no token');
-    }
+    // ✅ Token cookie'de - Authorization header GEREK YOK
+    // Sadece credentials: 'include' yeterli
 
     let response = await fetch(url, {
         ...options,
         headers,
-        credentials: 'include',
+        credentials: 'include', // ✅ Cookie otomatik gönderilir
     });
 
     console.log('[API] Response status:', response.status);
 
-    // ✅ 401 durumunda: Token varsa refresh dene, yoksa guest olarak devam et
+    // ✅ 401 durumunda: User varsa refresh dene
     if (response.status === 401) {
         console.log('[API] Got 401');
 
-        // Eğer token varsa refresh dene
-        if (store.accessToken) {
+        // User varsa (daha önce login yapmış), token refresh dene
+        if (store.user) {
             console.log('[API] Attempting token refresh...');
             const refreshResult = await refreshAccessToken();
 
-            if (refreshResult?.accessToken) {
+            if (refreshResult?.user) {
                 console.log('[API] Refresh successful, retrying request');
 
-                // Retry with new token
-                headers.set('Authorization', `Bearer ${refreshResult.accessToken}`);
+                // Retry with new cookie (otomatik gönderilecek)
                 response = await fetch(url, {
                     ...options,
                     headers,
@@ -123,10 +103,10 @@ export async function apiCall(
 
                 console.log('[API] Retry response status:', response.status);
             } else {
-                console.log('[API] Refresh failed, continuing as guest');
+                console.log('[API] Refresh failed, logging out');
             }
         } else {
-            console.log('[API] No token, this is a guest request - 401 is expected');
+            console.log('[API] No user, this is a guest request - 401 is expected');
         }
     }
 

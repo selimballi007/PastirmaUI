@@ -1,26 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useCallback, useState, startTransition } from "react";
-import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import type ReCAPTCHAComponent from "react-google-recaptcha";
 import { resetPasswordAction, type ActionState } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
-
-// ✅ Lazy load ReCAPTCHA
-const ReCAPTCHA = dynamic(() =>
-    import("react-google-recaptcha").then((mod) => {
-        return mod.default;
-    }), {
-    ssr: false,
-    loading: () => <div className="h-[78px] w-full animate-pulse bg-gray-100 rounded" />
-}
-) as React.ComponentType<React.ComponentProps<typeof ReCAPTCHAComponent> & {
-    ref?: React.Ref<ReCAPTCHAComponent>;
-}>;
-
-const RECAPTCHA_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+import Turnstile, { type TurnstileHandle } from "@/app/components/Turnstile";
 
 const initialState: ActionState = {
     success: false,
@@ -29,7 +14,7 @@ const initialState: ActionState = {
 export default function ResetPasswordFormClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const recaptchaRef = useRef<ReCAPTCHAComponent>(null);
+    const turnstileRef = useRef<TurnstileHandle>(null);
     const formRef = useRef<HTMLFormElement>(null);
 
     // ✅ Token'ı URL'den al
@@ -68,14 +53,14 @@ export default function ResetPasswordFormClient() {
 
     // ✅ Get captcha token
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
-        if (!recaptchaRef.current) return null;
+        if (!turnstileRef.current) return null;
 
         try {
-            const token = await recaptchaRef.current.executeAsync();
-            recaptchaRef.current.reset();
+            const token = await turnstileRef.current.executeAsync();
+            turnstileRef.current.reset();
             return token;
         } catch (error) {
-            console.error('ReCAPTCHA error:', error);
+            console.error('Turnstile error:', error);
             return null;
         }
     }, []);
@@ -304,13 +289,9 @@ export default function ResetPasswordFormClient() {
                     </div>
                 )}
 
-                {/* ReCAPTCHA */}
+                {/* Turnstile CAPTCHA */}
                 <div className="flex justify-center">
-                    <ReCAPTCHA
-                        sitekey={RECAPTCHA_KEY}
-                        size="invisible"
-                        ref={recaptchaRef}
-                    />
+                    <Turnstile ref={turnstileRef} />
                 </div>
 
                 {/* Back to Login */}

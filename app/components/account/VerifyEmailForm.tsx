@@ -1,33 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import type ReCAPTCHAComponent from "react-google-recaptcha";
 import { verifyEmailAction, resendVerificationByTokenAction, type ActionState } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
-
-// ✅ Lazy load ReCAPTCHA
-const ReCAPTCHA = dynamic(() =>
-    import("react-google-recaptcha").then((mod) => {
-        return mod.default;
-    }), {
-    ssr: false,
-    loading: () => <div className="h-[78px] w-full animate-pulse bg-gray-100 rounded" />
-}
-) as React.ComponentType<React.ComponentProps<typeof ReCAPTCHAComponent> & {
-    ref?: React.Ref<ReCAPTCHAComponent>;
-}>;
-
-const RECAPTCHA_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+import Turnstile, { type TurnstileHandle } from "@/app/components/Turnstile";
 
 type VerificationStatus = 'idle' | 'verifying' | 'success' | 'error' | 'expired';
 
 export default function VerifyEmailForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const recaptchaRef = useRef<ReCAPTCHAComponent>(null);
+    const turnstileRef = useRef<TurnstileHandle>(null);
 
     const [token, setToken] = useState<string | null>(null);
     const [status, setStatus] = useState<VerificationStatus>('idle');
@@ -52,14 +37,14 @@ export default function VerifyEmailForm() {
             setStatus('verifying');
 
             try {
-                if (!recaptchaRef.current) {
-                    // ReCAPTCHA henüz yüklenmedi, bekle
+                if (!turnstileRef.current) {
+                    // Turnstile henüz yüklenmedi, bekle
                     setTimeout(autoVerify, 500);
                     return;
                 }
 
-                const captchaToken = await recaptchaRef.current.executeAsync();
-                recaptchaRef.current.reset();
+                const captchaToken = await turnstileRef.current.executeAsync();
+                turnstileRef.current.reset();
 
                 const formData = new FormData();
                 formData.append('token', urlToken);
@@ -93,13 +78,13 @@ export default function VerifyEmailForm() {
 
     // ✅ Resend handler
     const handleResend = useCallback(async () => {
-        if (!token || !recaptchaRef.current) return;
+        if (!token || !turnstileRef.current) return;
 
         setIsResending(true);
 
         try {
-            const captchaToken = await recaptchaRef.current.executeAsync();
-            recaptchaRef.current.reset();
+            const captchaToken = await turnstileRef.current.executeAsync();
+            turnstileRef.current.reset();
 
             const formData = new FormData();
             formData.append('token', token);
@@ -254,13 +239,9 @@ export default function VerifyEmailForm() {
                     </div>
                 )}
 
-                {/* ReCAPTCHA */}
+                {/* Turnstile CAPTCHA */}
                 <div className="flex justify-center">
-                    <ReCAPTCHA
-                        sitekey={RECAPTCHA_KEY}
-                        size="invisible"
-                        ref={recaptchaRef}
-                    />
+                    <Turnstile ref={turnstileRef} />
                 </div>
 
                 {/* Action Links */}

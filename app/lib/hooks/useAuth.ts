@@ -19,7 +19,7 @@ export const useAuthActions = () => {
 
     const logOut = useCallback(async () => {
         try {
-            // Backend'e logout isteği gönder
+            // Backend'e logout isteği gönder - cookie'leri backend temizleyecek
             await fetchAPI('user/logout', {
                 method: 'POST'
             }).catch(error => {
@@ -27,7 +27,7 @@ export const useAuthActions = () => {
                 console.log('Backend logout failed, continuing with client cleanup');
             });
 
-            // Client-side temizlik
+            // Client-side temizlik (Zustand store)
             logoutStore();
             console.log('Logout request finished');
 

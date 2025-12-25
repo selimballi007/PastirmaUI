@@ -1,5 +1,4 @@
 'use server'
-import { cookies } from 'next/headers';
 import { treeifyError, z } from 'zod';
 
 // Validation Schema
@@ -103,28 +102,8 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         // 4. Success - Parse response
         const data = await res.json();
 
-        // ✅ Backend'den Set-Cookie header'ını al
-        const setCookieHeader = res.headers.get('set-cookie');
-
-        if (setCookieHeader) {
-            // Parse refreshToken from Set-Cookie header
-            const refreshTokenMatch = setCookieHeader.match(/refreshToken=([^;]+)/);
-            if (refreshTokenMatch) {
-                const refreshToken = refreshTokenMatch[1];
-
-                // ✅ Next.js cookies API ile set et
-                const cookieStore = await cookies();
-                cookieStore.set('refreshToken', decodeURIComponent(refreshToken), {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: 60 * 60 * 24 * 7, // 7 days
-                    path: '/',
-                });
-
-                console.log('✅ RefreshToken set via Next.js cookies');
-            }
-        }
+        // ✅ Backend artık cookie'leri otomatik set ediyor - frontend'e gerek yok!
+        // Browser Set-Cookie header'ını otomatik işler
 
         const totalTime = Date.now() - startTime;
         const apiTime = apiEnd - apiStart;
@@ -134,13 +113,12 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         - API Time: ${apiTime}ms
         - Processing Time: ${totalTime - apiTime}ms`);
         console.log("User data:", data.user);
-        console.log("Access Token:", data.accessToken);
-        console.log("res.cookies:", res.headers.get('set-cookie'));
+        console.log("Cookies set by backend:", res.headers.get('set-cookie'));
+
         return {
             success: true,
             message: "✅ Giriş başarılı! Yönlendiriliyorsunuz...",
             user: data.user,
-            accessToken: data.accessToken,
         };
 
     } catch (error) {
@@ -660,3 +638,6 @@ export async function resendVerificationByTokenAction(prevState: ActionState | n
         };
     }
 }
+
+// ✅ Cookie management artık backend'de - bu fonksiyonlar artık gereksiz
+// Backend logout endpoint'i cookie'leri temizliyor
