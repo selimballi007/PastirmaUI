@@ -12,6 +12,7 @@ import {
     Star,
     Folder,
     X,
+    BookOpen,
 } from 'lucide-react';
 import DashboardSidebar from '@/app/components/dashboard/DashboardSidebar'
 import DashboardNavbar from '@/app/components/dashboard/DashboardNavbar'
@@ -30,6 +31,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Ürünler', href: '/dashboard/products', icon: Package },
         { name: 'Kategoriler', href: '/dashboard/categories', icon: Folder },
         { name: 'Hero Slider', href: '/dashboard/hero-slides', icon: Image },
+        { name: 'Blog Yönetimi', href: '/dashboard/blog', icon: BookOpen },
         { name: 'Yorumlar', href: '/dashboard/reviews', icon: Star },
         { name: 'Müşteriler', href: '/dashboard/customers', icon: Users },
         { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },

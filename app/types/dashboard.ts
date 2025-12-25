@@ -170,3 +170,73 @@ export enum ReviewStatus {
 export interface UpdateReviewStatusRequest {
     status: ReviewStatus;
 }
+
+// Blog Post types
+export interface BlogPost {
+    id: number;
+    title: string;
+    content: string; // HTML from TipTap
+    excerpt: string;
+    imageUrl: string;
+    categoryId: number;
+    categoryName: string;
+    authorId: number;
+    authorName: string;
+    publishedDate: string | null;
+    isActive: boolean;
+    isFeatured: boolean;
+    viewCount: number;
+    readTime: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface BlogPostListItem {
+    id: number;
+    title: string;
+    excerpt: string;
+    imageUrl: string;
+    categoryId: number;
+    categoryName: string;
+    authorName: string;
+    publishedDate: string | null;
+    isActive: boolean;
+    isFeatured: boolean;
+    viewCount: number;
+    readTime: string;
+    createdAt: string;
+}
+
+export interface CreateBlogPostRequest {
+    title: string;
+    content: string;
+    excerpt: string;
+    imageUrl: string;
+    categoryId: number;
+    publishedDate?: string | null;
+    isFeatured?: boolean;
+}
+
+export interface UpdateBlogPostRequest {
+    title: string;
+    content: string;
+    excerpt: string;
+    imageUrl: string;
+    categoryId: number;
+    publishedDate?: string | null;
+    isFeatured?: boolean;
+}
+
+export interface BlogCategory {
+    id: number;
+    name: string;
+    icon: string;
+    displayOrder: number;
+    isActive: boolean;
+}
+
+export interface CreateBlogCategoryRequest {
+    name: string;
+    icon?: string;
+    displayOrder?: number;
+}

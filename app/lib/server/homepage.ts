@@ -40,7 +40,7 @@ export interface HeroSlide {
 
 export async function getHeroSlides(): Promise<HeroSlide[]> {
     try {
-        const slides = await serverFetchAPI<any[]>('hero-slide');
+        const slides = await serverFetchAPI<any[]>('HeroSlide');
 
         // Transform API response to match HeroSlide interface
         return slides.map(slide => ({
@@ -210,44 +210,43 @@ export interface BlogPost {
     author: string;
 }
 
+// Helper function to get category color
+function getCategoryColor(categoryName: string): string {
+    const colorMap: Record<string, string> = {
+        'Tarif': 'bg-orange-100 text-orange-700',
+        'Bilgi': 'bg-emerald-100 text-emerald-700',
+        'Öneri': 'bg-blue-100 text-blue-700',
+    };
+    return colorMap[categoryName] || 'bg-gray-100 text-gray-700';
+}
+
+// Helper function to format date
+function formatBlogDate(dateString: string | null): string {
+    if (!dateString) return 'Tarih belirtilmemiş';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
     try {
-        // For now, return static data. Later this can be dynamic from API
-        return [
-            {
-                id: 1,
-                title: 'Kayseri Pastırması Nasıl Yapılır?',
-                excerpt: 'Geleneksel Kayseri pastırmasının yapım aşamalarını ve püf noktalarını öğrenin...',
-                image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
-                category: 'Tarif',
-                categoryColor: 'bg-orange-100 text-orange-700',
-                date: '15 Kas 2024',
-                readTime: '8 dk',
-                author: 'Usta Kasap Ahmet',
-            },
-            {
-                id: 2,
-                title: 'Sucuk Saklama ve Tüketim İpuçları',
-                excerpt: 'Sucuğunuzu doğru saklayarak tat ve tazeliğini uzun süre koruyun...',
-                image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
-                category: 'Bilgi',
-                categoryColor: 'bg-emerald-100 text-emerald-700',
-                date: '12 Kas 2024',
-                readTime: '5 dk',
-                author: 'Beslenme Uzmanı',
-            },
-            {
-                id: 3,
-                title: 'Kahvaltıda Şarküteri Ürünleri',
-                excerpt: 'Sağlıklı ve lezzetli bir kahvaltı için şarküteri ürünlerini nasıl kullanmalı...',
-                image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=600',
-                category: 'Öneri',
-                categoryColor: 'bg-blue-100 text-blue-700',
-                date: '8 Kas 2024',
-                readTime: '6 dk',
-                author: 'Şef Ayşe',
-            },
-        ];
+        const posts = await serverFetchAPI<any[]>('BlogPost/featured');
+
+        // Transform API response to match BlogPost interface
+        return posts.slice(0, 3).map(post => ({
+            id: post.id,
+            title: post.title,
+            excerpt: post.excerpt,
+            image: post.imageUrl,
+            category: post.categoryName,
+            categoryColor: getCategoryColor(post.categoryName),
+            date: formatBlogDate(post.publishedDate || post.createdAt),
+            readTime: post.readTime,
+            author: post.authorName,
+        }));
     } catch (error) {
         console.error('[Server] Error fetching blog posts:', error);
         return [];
