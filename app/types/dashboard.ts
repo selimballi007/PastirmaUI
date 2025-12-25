@@ -240,3 +240,41 @@ export interface CreateBlogCategoryRequest {
     icon?: string;
     displayOrder?: number;
 }
+
+// Cloudinary Types
+export interface CloudinaryImage {
+    publicId: string;
+    url: string;
+    secureUrl: string;
+    format: string;
+    width: number;
+    height: number;
+    bytes: number;
+    createdAt: string;
+    resourceType: string;
+    usedInProducts: ProductUsage[];
+    isUsedInDatabase: boolean;
+}
+
+export interface ProductUsage {
+    productId: number;
+    productName: string;
+    usageType: 'MainImage' | 'GalleryImage';
+}
+
+export interface CloudinaryDeleteResult {
+    success: boolean;
+    message: string;
+    updatedProducts: ProductUpdate[];
+}
+
+export interface ProductUpdate {
+    productId: number;
+    productName: string;
+    updateType: 'MainImageRemoved' | 'GalleryImageRemoved';
+}
+
+export interface UpdateImageUrlsRequest {
+    oldUrl: string;
+    newUrl: string;
+}
