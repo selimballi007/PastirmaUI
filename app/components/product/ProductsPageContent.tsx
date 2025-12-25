@@ -1,11 +1,9 @@
-// app/products/page.tsx
+// app/components/product/ProductsPageContent.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ProductCard from '@/app/components/product/ProductCard';
-import { productService } from '@/app/lib/services/productService';
-import { useCategoryStore } from '@/app/lib/store/categoryStore';
 import type { Product } from '@/app/types/dashboard';
 import {
     Package,
@@ -16,106 +14,40 @@ import {
     Search,
 } from 'lucide-react';
 
-export default function ProductsPageContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
+interface ProductsPageContentProps {
+    initialProducts: Product[];
+    categories: any[];
+    initialCategoryId: number | null;
+    initialFilter: string;
+}
 
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export default function ProductsPageContent({
+    initialProducts,
+    categories,
+    initialCategoryId,
+    initialFilter,
+}: ProductsPageContentProps) {
+    const router = useRouter();
+
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-    const [selectedFilter, setSelectedFilter] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('default');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-    const { categories, fetchCategories } = useCategoryStore();
-
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        // URL'den category parametresini al
-        const categoryParam = searchParams.get('category');
-        const filterParam = searchParams.get('filter');
-
-        if (categoryParam) {
-            setSelectedCategoryId(parseInt(categoryParam));
-        }
-        if (filterParam) {
-            setSelectedFilter(filterParam);
-        }
-
-        fetchProducts();
-    }, [searchParams]);
-
-    const fetchProducts = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const categoryParam = searchParams.get('category');
-            const filterParam = searchParams.get('filter');
-
-            const filters: any = {};
-
-            if (categoryParam) {
-                filters.categoryId = parseInt(categoryParam);
-            }
-
-            if (filterParam) {
-                if (filterParam === 'best-sellers') {
-                    const bestSellers = await productService.getProducts({ isBestSeller: true, limit: 100 });
-                    setProducts(bestSellers);
-                    setLoading(false);
-                    return;
-                } else if (filterParam === 'campaign') {
-                    const campaigns = await productService.getProducts({ isCampaign: true, limit: 100 });
-                    setProducts(campaigns);
-                    setLoading(false);
-                    return;
-                } else if (filterParam === 'new') {
-                    filters.isNew = true;
-                }
-            }
-
-            const result = await productService.getProducts(filters);
-            setProducts(result);
-        } catch (err) {
-            console.error('Error fetching products:', err);
-            setError('Ürünler yüklenirken bir hata oluştu.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleCategoryChange = (categoryId: number | null) => {
-        setSelectedCategoryId(categoryId);
-        const params = new URLSearchParams(searchParams.toString());
-
         if (categoryId) {
-            params.set('category', categoryId.toString());
+            router.push(`/products?category=${categoryId}`);
         } else {
-            params.delete('category');
+            router.push('/products');
         }
-        params.delete('filter');
-
-        router.push(`/products?${params.toString()}`);
     };
 
     const handleFilterChange = (filter: string) => {
-        setSelectedFilter(filter);
-        const params = new URLSearchParams();
-
         if (filter !== 'all') {
-            params.set('filter', filter);
+            router.push(`/products?filter=${filter}`);
+        } else {
+            router.push('/products');
         }
-        params.delete('category');
-
-        router.push(`/products?${params.toString()}`);
-        setSelectedCategoryId(null);
     };
 
     const handleAddToCart = (productId: number) => {
@@ -127,17 +59,17 @@ export default function ProductsPageContent() {
         console.log('Quick view:', productId);
     };
 
-    // Filtreleme ve sıralama
-    const filteredProducts = products
+    // Client-side filtering and sorting
+    const filteredProducts = initialProducts
         .filter((product) => {
-            // Arama filtresi
+            // Search filter
             if (searchTerm) {
                 return product.name.toLowerCase().includes(searchTerm.toLowerCase());
             }
             return true;
         })
         .sort((a, b) => {
-            // Sıralama
+            // Sorting
             switch (sortBy) {
                 case 'price-asc':
                     return a.price - b.price;
@@ -155,14 +87,11 @@ export default function ProductsPageContent() {
         });
 
     const getPageTitle = () => {
-        const filterParam = searchParams.get('filter');
-        const categoryParam = searchParams.get('category');
-
-        if (filterParam === 'best-sellers') return 'Çok Satanlar';
-        if (filterParam === 'campaign') return 'Kampanyalı Ürünler';
-        if (filterParam === 'new') return 'Yeni Ürünler';
-        if (categoryParam) {
-            const category = categories.find((c) => c.id === parseInt(categoryParam));
+        if (initialFilter === 'best-sellers') return 'Çok Satanlar';
+        if (initialFilter === 'campaign') return 'Kampanyalı Ürünler';
+        if (initialFilter === 'new') return 'Yeni Ürünler';
+        if (initialCategoryId) {
+            const category = categories.find((c) => c.id === initialCategoryId);
             return category ? category.name : 'Ürünler';
         }
         return 'Tüm Ürünler';
@@ -263,7 +192,7 @@ export default function ProductsPageContent() {
                                 <div className="space-y-2">
                                     <button
                                         onClick={() => handleFilterChange('all')}
-                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedFilter === 'all' && !selectedCategoryId
+                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${initialFilter === 'all' && !initialCategoryId
                                             ? 'bg-gray-900 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
@@ -272,7 +201,7 @@ export default function ProductsPageContent() {
                                     </button>
                                     <button
                                         onClick={() => handleFilterChange('best-sellers')}
-                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedFilter === 'best-sellers'
+                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${initialFilter === 'best-sellers'
                                             ? 'bg-orange-600 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
@@ -281,7 +210,7 @@ export default function ProductsPageContent() {
                                     </button>
                                     <button
                                         onClick={() => handleFilterChange('campaign')}
-                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedFilter === 'campaign'
+                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${initialFilter === 'campaign'
                                             ? 'bg-red-600 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
@@ -290,7 +219,7 @@ export default function ProductsPageContent() {
                                     </button>
                                     <button
                                         onClick={() => handleFilterChange('new')}
-                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedFilter === 'new'
+                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${initialFilter === 'new'
                                             ? 'bg-blue-600 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
@@ -308,7 +237,7 @@ export default function ProductsPageContent() {
                                 <div className="space-y-2">
                                     <button
                                         onClick={() => handleCategoryChange(null)}
-                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${!selectedCategoryId && selectedFilter === 'all'
+                                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${!initialCategoryId && initialFilter === 'all'
                                             ? 'bg-gray-900 text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
@@ -319,7 +248,7 @@ export default function ProductsPageContent() {
                                         <button
                                             key={category.id}
                                             onClick={() => handleCategoryChange(category.id)}
-                                            className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center justify-between ${selectedCategoryId === category.id
+                                            className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center justify-between ${initialCategoryId === category.id
                                                 ? 'bg-gray-900 text-white'
                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
@@ -339,14 +268,10 @@ export default function ProductsPageContent() {
                             </div>
 
                             {/* Active Filters */}
-                            {(selectedCategoryId || selectedFilter !== 'all') && (
+                            {(initialCategoryId || initialFilter !== 'all') && (
                                 <div className="mt-6 pt-6 border-t">
                                     <button
-                                        onClick={() => {
-                                            setSelectedCategoryId(null);
-                                            setSelectedFilter('all');
-                                            router.push('/products');
-                                        }}
+                                        onClick={() => router.push('/products')}
                                         className="w-full px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center space-x-2"
                                     >
                                         <X className="w-4 h-4" />
@@ -359,21 +284,7 @@ export default function ProductsPageContent() {
 
                     {/* Products Grid */}
                     <main className="flex-1">
-                        {loading ? (
-                            <div className="flex justify-center items-center py-20">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-                            </div>
-                        ) : error ? (
-                            <div className="text-center py-20">
-                                <p className="text-red-600 mb-4">{error}</p>
-                                <button
-                                    onClick={fetchProducts}
-                                    className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black"
-                                >
-                                    Tekrar Dene
-                                </button>
-                            </div>
-                        ) : filteredProducts.length === 0 ? (
+                        {filteredProducts.length === 0 ? (
                             <div className="text-center py-20">
                                 <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -387,8 +298,6 @@ export default function ProductsPageContent() {
                                 <button
                                     onClick={() => {
                                         setSearchTerm('');
-                                        setSelectedCategoryId(null);
-                                        setSelectedFilter('all');
                                         router.push('/products');
                                     }}
                                     className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black"
