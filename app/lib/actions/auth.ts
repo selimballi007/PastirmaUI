@@ -1,5 +1,6 @@
 'use server'
 import { treeifyError, z } from 'zod';
+import { cookies } from 'next/headers';
 
 // Validation Schema
 const LoginSchema = z.object({
@@ -32,6 +33,7 @@ export type ActionState = {
     showResend?: boolean;
     user?: any;
     accessToken?: string;
+    redirectTo?: string;
 }
 
 // Login Action
@@ -102,8 +104,48 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         // 4. Success - Parse response
         const data = await res.json();
 
-        // ✅ Backend artık cookie'leri otomatik set ediyor - frontend'e gerek yok!
-        // Browser Set-Cookie header'ını otomatik işler
+        // ✅ Backend'den gelen cookie'leri Next.js'e manuel olarak set et
+        const setCookieHeader = res.headers.get('set-cookie');
+        console.log("Cookies from backend:", setCookieHeader);
+
+        if (setCookieHeader) {
+            // Set-Cookie header'ı parse et (multiple cookies comma ile ayrılmış olabilir)
+            const cookieStrings = setCookieHeader.split(', ');
+
+            const cookieStore = await cookies();
+
+            for (const cookieStr of cookieStrings) {
+                // Cookie string'i parse et: "name=value; options..."
+                const [nameValue, ...options] = cookieStr.split('; ');
+                const [name, value] = nameValue.split('=');
+
+                if (name && value) {
+                    // Cookie options'ları parse et
+                    const cookieOptions: any = {
+                        httpOnly: options.some(opt => opt.toLowerCase() === 'httponly'),
+                        secure: options.some(opt => opt.toLowerCase() === 'secure'),
+                        sameSite: 'lax' as const, // Backend'den lax geliyor
+                        path: '/',
+                    };
+
+                    // Expires varsa ekle
+                    const expiresOption = options.find(opt => opt.toLowerCase().startsWith('expires='));
+                    if (expiresOption) {
+                        const expiresDate = new Date(expiresOption.split('=')[1]);
+                        cookieOptions.expires = expiresDate;
+                    }
+
+                    // Max-Age varsa ekle
+                    const maxAgeOption = options.find(opt => opt.toLowerCase().startsWith('max-age='));
+                    if (maxAgeOption) {
+                        cookieOptions.maxAge = parseInt(maxAgeOption.split('=')[1]);
+                    }
+
+                    console.log(`Setting cookie: ${name}`, cookieOptions);
+                    cookieStore.set(name, value, cookieOptions);
+                }
+            }
+        }
 
         const totalTime = Date.now() - startTime;
         const apiTime = apiEnd - apiStart;
@@ -113,7 +155,6 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         - API Time: ${apiTime}ms
         - Processing Time: ${totalTime - apiTime}ms`);
         console.log("User data:", data.user);
-        console.log("Cookies set by backend:", res.headers.get('set-cookie'));
 
         return {
             success: true,
@@ -481,16 +522,16 @@ export async function resetPasswordAction(prevState: ResetPasswordActionState | 
     }
 }
 
-// Verify Email Schema
+// Verify Email Schema - captchaToken optional (email access proves identity)
 const VerifyEmailSchema = z.object({
     token: z.string().min(1, "Token geçersiz veya eksik."),
-    captchaToken: z.string().min(1, "ReCAPTCHA doğrulaması gerekli."),
+    captchaToken: z.string().optional(), // Optional - email verification doesn't need captcha
 });
 
-// Resend Verification by Token Schema
+// Resend Verification by Token Schema - captchaToken also optional
 const ResendVerificationByTokenSchema = z.object({
     token: z.string().min(1, "Token geçersiz veya eksik."),
-    captchaToken: z.string().min(1, "ReCAPTCHA doğrulaması gerekli."),
+    captchaToken: z.string().optional(), // Optional - resend doesn't need captcha either
 });
 
 // Verify Email Action
@@ -639,5 +680,171 @@ export async function resendVerificationByTokenAction(prevState: ActionState | n
     }
 }
 
-// ✅ Cookie management artık backend'de - bu fonksiyonlar artık gereksiz
-// Backend logout endpoint'i cookie'leri temizliyor
+/**
+ * Logout Action - Manually deletes cookies and calls backend logout
+ *
+ * Just like we manually SET cookies during login, we must manually DELETE them during logout
+ * because Next.js Server Actions don't automatically handle cookie operations from backend responses
+ */
+export async function logoutAction(): Promise<{ success: boolean }> {
+    try {
+        console.log('🔴 [LogoutAction] Starting logout process...');
+
+        // 1. Call backend logout endpoint (optional - mainly for token invalidation on server)
+        try {
+            // ✅ Get cookies to send with request
+            const cookieStore = await cookies();
+            const accessToken = cookieStore.get('accessToken')?.value;
+            const refreshToken = cookieStore.get('refreshToken')?.value;
+
+            // Build Cookie header if tokens exist
+            const cookieHeader = [
+                accessToken ? `accessToken=${accessToken}` : '',
+                refreshToken ? `refreshToken=${refreshToken}` : ''
+            ].filter(Boolean).join('; ');
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
+                },
+            });
+
+            if (res.ok) {
+                console.log('✅ [LogoutAction] Backend logout successful');
+            } else {
+                console.log('⚠️ [LogoutAction] Backend logout failed, continuing with cookie cleanup');
+            }
+        } catch (error) {
+            console.log('⚠️ [LogoutAction] Backend logout request failed:', error);
+            // Continue anyway - we'll clear cookies manually
+        }
+
+        // 2. Manually delete cookies using Next.js cookies() API
+        // This is CRITICAL - just like we manually set cookies during login
+        const cookieStore = await cookies();
+
+        cookieStore.delete('accessToken');
+        cookieStore.delete('refreshToken');
+
+        console.log('✅ [LogoutAction] Cookies deleted successfully');
+
+        return { success: true };
+
+    } catch (error) {
+        console.error('❌ [LogoutAction] Logout error:', error);
+
+        // Even if there's an error, try to delete cookies
+        try {
+            const cookieStore = await cookies();
+            cookieStore.delete('accessToken');
+            cookieStore.delete('refreshToken');
+        } catch (cookieError) {
+            console.error('❌ [LogoutAction] Cookie deletion failed:', cookieError);
+        }
+
+        return { success: false };
+    }
+}
+
+/**
+ * Refresh Token Action - Manually sets new cookies from backend
+ *
+ * Just like login/logout, we must manually handle cookies because Next.js Server Actions
+ * don't automatically forward Set-Cookie headers from backend responses
+ */
+export async function refreshTokenAction(): Promise<{ success: boolean; user?: any }> {
+    try {
+        console.log('🔄 [RefreshTokenAction] Starting token refresh...');
+
+        // Get current cookies to send with request
+        const cookieStore = await cookies();
+        const accessToken = cookieStore.get('accessToken')?.value;
+        const refreshToken = cookieStore.get('refreshToken')?.value;
+
+        if (!accessToken || !refreshToken) {
+            console.log('❌ [RefreshTokenAction] No tokens found in cookies');
+            return { success: false };
+        }
+
+        // ✅ CRITICAL: Manually send cookies in Cookie header
+        // Server Actions run on Next.js server, not browser - must manually forward cookies
+        const cookieHeader = `accessToken=${accessToken}; refreshToken=${refreshToken}`;
+        console.log('[RefreshTokenAction] Sending cookies to backend');
+        console.log('[RefreshTokenAction] Cookie header:', cookieHeader.substring(0, 100) + '...');
+
+        // Call backend refresh-token endpoint
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/refresh-token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': cookieHeader, // ✅ Manually send cookies
+            },
+        });
+
+        console.log('[RefreshTokenAction] Response status:', res.status);
+
+        if (!res.ok) {
+            // ✅ CRITICAL: Log the actual error response from backend
+            const errorText = await res.text();
+            console.error('[RefreshTokenAction] Refresh failed with status:', res.status);
+            console.error('[RefreshTokenAction] Error response:', errorText);
+
+            try {
+                const errorJson = JSON.parse(errorText);
+                console.error('[RefreshTokenAction] Parsed error:', errorJson);
+            } catch (e) {
+                console.error('[RefreshTokenAction] Could not parse error as JSON');
+            }
+
+            return { success: false };
+        }
+
+        // Parse response to get user data
+        const data = await res.json();
+
+        // ✅ CRITICAL: Manually parse and set new cookies from backend response
+        const setCookieHeader = res.headers.get('set-cookie');
+        console.log('[RefreshTokenAction] Set-Cookie header:', setCookieHeader);
+
+        if (setCookieHeader) {
+            const cookieStrings = setCookieHeader.split(', ');
+            const newCookieStore = await cookies();
+
+            for (const cookieStr of cookieStrings) {
+                const [nameValue, ...options] = cookieStr.split('; ');
+                const [name, value] = nameValue.split('=');
+
+                if (name && value) {
+                    const cookieOptions: any = {
+                        httpOnly: options.some(opt => opt.toLowerCase() === 'httponly'),
+                        secure: options.some(opt => opt.toLowerCase() === 'secure'),
+                        sameSite: 'lax' as const,
+                        path: '/',
+                    };
+
+                    const expiresOption = options.find(opt => opt.toLowerCase().startsWith('expires='));
+                    if (expiresOption) {
+                        cookieOptions.expires = new Date(expiresOption.split('=')[1]);
+                    }
+
+                    const maxAgeOption = options.find(opt => opt.toLowerCase().startsWith('max-age='));
+                    if (maxAgeOption) {
+                        cookieOptions.maxAge = parseInt(maxAgeOption.split('=')[1]);
+                    }
+
+                    console.log(`✅ [RefreshTokenAction] Setting cookie: ${name}`);
+                    newCookieStore.set(name, value, cookieOptions);
+                }
+            }
+        }
+
+        console.log('✅ [RefreshTokenAction] Token refresh successful');
+        return { success: true, user: data.user };
+
+    } catch (error) {
+        console.error('❌ [RefreshTokenAction] Refresh error:', error);
+        return { success: false };
+    }
+}

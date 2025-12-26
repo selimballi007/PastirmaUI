@@ -45,6 +45,13 @@ export function getApiBaseUrl(): string {
  * Build full API URL from endpoint
  */
 export function buildApiUrl(endpoint: string): string {
+    // If endpoint is already a full URL, return as-is
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        return endpoint;
+    }
+
     const baseUrl = getApiBaseUrl();
-    return `${baseUrl}${endpoint}`;
+    // Remove leading slash from endpoint if present to avoid double slashes
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    return `${baseUrl}${cleanEndpoint}`;
 }

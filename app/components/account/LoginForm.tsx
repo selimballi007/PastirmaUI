@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef, useCallback, startTransition, useState } from "react";
+import { flushSync } from "react-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction, resendVerificationAction, type ActionState } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
@@ -14,9 +15,13 @@ const initialState: ActionState = {
 
 export default function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const turnstileRef = useRef<TurnstileHandle>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const { login } = useAuthStore();
+
+    // ✅ Manuel loading state - captcha için
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // useActionState for login
     const [loginState, loginFormAction, isLoginPending] = useActionState(
@@ -33,32 +38,42 @@ export default function LoginForm() {
     // Handle successful login
     useEffect(() => {
         if (loginState?.success && loginState.user) {
-            // ✅ Sadece user bilgisini store'a kaydet - token cookie'de
+            // ✅ Store'a user bilgisini kaydet
             login(loginState.user);
 
-            // ✅ User kaydedildi mi kontrol et
-            setTimeout(() => {
-                const state = useAuthStore.getState();
-                if (state.user) {
-                    // ✅ Role kontrolü
-                    if (state.user.role === 'Admin') {
-                        router.push('/dashboard');
-                    } else {
-                        router.push('/');
-                    }
-                } else {
-                    console.error('❌ LOGINFORM User not set, not navigating!');
-                }
-            }, 1500);
+            // ✅ Redirect parametresini kontrol et
+            const redirect = searchParams.get('redirect') || (loginState.user.role === 'Admin' ? '/dashboard' : '/');
+
+            console.log('🚀 Login successful, will redirect to:', redirect);
+            console.log('👤 User role:', loginState.user.role);
+
+            // ✅ Cookie'ler artık Server Action'da set ediliyor
+            // router.push() kullanarak smooth client-side navigation
+            console.log('✅ Redirecting to:', redirect);
+            router.push(redirect);
+        } else if (loginState && !loginState.success) {
+            // ✅ Login başarısız olursa processing state'i sıfırla
+            setIsProcessing(false);
         }
-    }, [loginState, router, login]);
+    }, [loginState, login, searchParams, router]);
 
     // Handle successful resend
     useEffect(() => {
         if (resendState.success) {
+            // Clear processing state
+            setIsProcessing(false);
+            // Reset form
             formRef.current?.reset();
+
+            // Refresh page to reset to normal login form and prevent spam
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000); // 2 seconds delay to let user see the success message
+        } else if (resendState && !resendState.success && resendState.message) {
+            // Clear processing state on error
+            setIsProcessing(false);
         }
-    }, [resendState]);
+    }, [resendState.success, resendState.message, router]);
 
     // Get captcha token
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
@@ -75,27 +90,52 @@ export default function LoginForm() {
 
     // Handle login submit
     const handleLoginSubmit = useCallback(async (formData: FormData) => {
-        const token = await getCaptchaToken();
-        if (!token) return;
-
-        formData.append('captchaToken', token);
-        startTransition(() => {
-            loginFormAction(formData);
+        // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
+        // This ensures button becomes disabled instantly, without waiting for async captcha
+        flushSync(() => {
+            setIsProcessing(true);
         });
+
+        try {
+            const token = await getCaptchaToken();
+            if (!token) {
+                setIsProcessing(false);
+                return;
+            }
+
+            formData.append('captchaToken', token);
+            startTransition(() => {
+                loginFormAction(formData);
+            });
+        } catch (error) {
+            setIsProcessing(false);
+        }
     }, [getCaptchaToken, loginFormAction]);
 
     // Handle resend submit
     const handleResendSubmit = useCallback(async (formData: FormData) => {
-        const token = await getCaptchaToken();
-        if (!token) return;
-
-        formData.append('captchaToken', token);
-        startTransition(() => {
-            resendFormAction(formData);
+        // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
+        flushSync(() => {
+            setIsProcessing(true);
         });
+
+        try {
+            const token = await getCaptchaToken();
+            if (!token) {
+                setIsProcessing(false);
+                return;
+            }
+
+            formData.append('captchaToken', token);
+            startTransition(() => {
+                resendFormAction(formData);
+            });
+        } catch (error) {
+            setIsProcessing(false);
+        }
     }, [getCaptchaToken, resendFormAction]);
 
-    const isPending = isLoginPending || isResendPending;
+    const isPending = isLoginPending || isResendPending || isProcessing;
     const currentState = loginState.showResend ? resendState : loginState;
     const showResendButton = loginState.showResend;
 

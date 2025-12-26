@@ -31,8 +31,12 @@ export const useFavoriteStore = create<FavoriteStoreState>()(
                         favoriteCount: ids.size,
                         loading: false
                     });
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Error initializing favorites:', error);
+                    // 401 hatası normal (kullanıcı henüz authenticated değil veya cookie hazır değil)
+                    if (error?.message?.includes('401')) {
+                        console.log('User not authenticated yet, skipping favorites initialization');
+                    }
                     set({ loading: false });
                 }
             },
@@ -114,3 +118,8 @@ export const useFavoriteStore = create<FavoriteStoreState>()(
         }
     )
 )
+
+// ✅ Export standalone function for use in authStore
+export const initializeFavorites = () => {
+    return useFavoriteStore.getState().initializeFavorites();
+};

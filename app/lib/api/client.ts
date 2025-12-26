@@ -3,6 +3,7 @@
 
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { parseFetchResponse, buildApiUrl } from '@/app/lib/utils/fetch';
+import { refreshTokenAction } from '@/app/lib/actions/auth';
 
 let refreshPromise: Promise<{ user: any } | null> | null = null;
 
@@ -15,32 +16,23 @@ async function refreshAccessToken() {
     console.log('[API] Starting token refresh...');
     refreshPromise = (async () => {
         try {
-            const url = `${process.env.NEXT_PUBLIC_API_URL}user/refresh-token`;
+            // ✅ Use Server Action to properly handle cookie updates
+            const result = await refreshTokenAction();
 
-            // ✅ Token cookie'de - credentials: 'include' ile otomatik gönderilir
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include', // ✅ Cookie otomatik gönderilir
-            });
-
-            console.log('[API] Refresh response status:', response.status);
-
-            if (!response.ok) {
-                console.error('[API] Refresh failed with status:', response.status);
+            if (!result.success) {
+                console.error('[API] Refresh failed');
                 useAuthStore.getState().logout();
                 return null;
             }
 
-            const data = await response.json();
             console.log('[API] Refresh successful');
 
-            // ✅ Sadece user bilgisini güncelle - token cookie'de
-            useAuthStore.getState().login(data.user);
+            // ✅ Update user in store
+            if (result.user) {
+                useAuthStore.getState().login(result.user);
+            }
 
-            return { user: data.user };
+            return { user: result.user };
         } catch (error) {
             console.error('[API] Token refresh error:', error);
             useAuthStore.getState().logout();

@@ -4,7 +4,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/app/lib/store/authStore';
-import { fetchAPI } from '@/app/lib/api/client';
+import { logoutAction } from '@/app/lib/actions/auth';
 
 /**
  * Auth actions hook for client-side auth operations
@@ -19,23 +19,25 @@ export const useAuthActions = () => {
 
     const logOut = useCallback(async () => {
         try {
-            // Backend'e logout isteği gönder - cookie'leri backend temizleyecek
-            await fetchAPI('user/logout', {
-                method: 'POST'
-            }).catch(error => {
-                // Backend logout hatasında bile devam et
-                console.log('Backend logout failed, continuing with client cleanup');
-            });
+            console.log('🔴 [useAuth] Starting logout...');
+
+            // ✅ Server Action ile logout - cookies'leri manuel olarak siler
+            // Backend'e de logout isteği gönderir (token invalidation için)
+            await logoutAction();
 
             // Client-side temizlik (Zustand store)
             logoutStore();
-            console.log('Logout request finished');
+            console.log('✅ [useAuth] Client state cleared');
 
             // Yönlendirme
             router.push('/');
 
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('❌ [useAuth] Logout error:', error);
+
+            // Hata olsa bile client state'i temizle
+            logoutStore();
+            router.push('/');
         }
     }, [logoutStore, router]);
 

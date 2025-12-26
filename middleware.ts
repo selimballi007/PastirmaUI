@@ -17,12 +17,14 @@ export function middleware(request: NextRequest) {
     // User is authenticated if they have an accessToken
     const isAuthenticated = !!accessToken;
 
-    // Log for debugging
-    console.log('[Middleware]', {
+    // Log for debugging with full cookie details
+    console.log('[Middleware] 🔍', {
         pathname,
         isAuthenticated,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
+        accessTokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : 'NONE',
+        allCookies: request.cookies.getAll().map(c => c.name),
     });
 
     // Protect dashboard routes

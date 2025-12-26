@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { verifyEmailAction, resendVerificationByTokenAction, type ActionState } from "@/app/lib/actions/auth";
+import { verifyEmailAction, resendVerificationByTokenAction } from "@/app/lib/actions/auth";
 import ButtonWithSpinner from "@/app/components/ButtonWithSpinner";
-import Turnstile, { type TurnstileHandle } from "@/app/components/Turnstile";
 
 type VerificationStatus = 'idle' | 'verifying' | 'success' | 'error' | 'expired';
 
 export default function VerifyEmailForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const turnstileRef = useRef<TurnstileHandle>(null);
 
     const [token, setToken] = useState<string | null>(null);
     const [status, setStatus] = useState<VerificationStatus>('idle');
@@ -37,18 +35,10 @@ export default function VerifyEmailForm() {
             setStatus('verifying');
 
             try {
-                if (!turnstileRef.current) {
-                    // Turnstile henüz yüklenmedi, bekle
-                    setTimeout(autoVerify, 500);
-                    return;
-                }
-
-                const captchaToken = await turnstileRef.current.executeAsync();
-                turnstileRef.current.reset();
-
+                // ✅ Email verification doesn't need captcha - user already proved email access
                 const formData = new FormData();
                 formData.append('token', urlToken);
-                formData.append('captchaToken', captchaToken ?? "");
+                formData.append('captchaToken', "skip"); // Backend should skip captcha for email verify
 
                 const result = await verifyEmailAction(null, formData);
 
@@ -78,17 +68,15 @@ export default function VerifyEmailForm() {
 
     // ✅ Resend handler
     const handleResend = useCallback(async () => {
-        if (!token || !turnstileRef.current) return;
+        if (!token) return;
 
         setIsResending(true);
 
         try {
-            const captchaToken = await turnstileRef.current.executeAsync();
-            turnstileRef.current.reset();
-
+            // ✅ Resend also doesn't need captcha
             const formData = new FormData();
             formData.append('token', token);
-            formData.append('captchaToken', captchaToken ?? "");
+            formData.append('captchaToken', "skip");
 
             const result = await resendVerificationByTokenAction(null, formData);
 
@@ -239,10 +227,7 @@ export default function VerifyEmailForm() {
                     </div>
                 )}
 
-                {/* Turnstile CAPTCHA */}
-                <div className="flex justify-center">
-                    <Turnstile ref={turnstileRef} />
-                </div>
+                {/* Turnstile CAPTCHA - Not needed for email verification */}
 
                 {/* Action Links */}
                 <div className="pt-4 border-t border-gray-200 space-y-3">

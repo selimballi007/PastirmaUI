@@ -10,6 +10,7 @@ import { useAuthStore } from '@/app/lib/store/authStore'
 import { Heart } from 'lucide-react'
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore'
 import { useAuthActions } from '@/app/lib/hooks'
+import { usePathname } from 'next/navigation'
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -23,6 +24,7 @@ export default function Navbar() {
     // ✅ Auth store'dan user bilgisini al
     const user = useAuthStore((state) => state.user)
     const { logOut } = useAuthActions();
+    const pathname = usePathname()
 
     const favoriteCount = useFavoriteStore((state) => state.favoriteCount)
 
@@ -30,6 +32,9 @@ export default function Navbar() {
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    // ✅ Favorites are now loaded ONLY after successful login in authStore
+    // This prevents 401 errors when refreshing the page with expired tokens
 
     // Sepet bilgilerini al
     useEffect(() => {

@@ -20,6 +20,11 @@ export default function ButtonWithSpinner({
     className = "",
     ...props
 }: ButtonWithSpinnerProps) {
+    // ✅ Debug: Log when loading prop changes
+    React.useEffect(() => {
+        console.log('[ButtonWithSpinner] loading prop changed to:', loading);
+    }, [loading]);
+
     return (
         <button
             disabled={loading || disabled}

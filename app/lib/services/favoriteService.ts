@@ -1,6 +1,6 @@
 // app/lib/services/favoriteService.ts
 import { fetchAPI } from '@/app/lib/api/client'
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export interface FavoriteProduct {
     id: number;
@@ -39,7 +39,7 @@ export const favoriteService = {
     },
 
     async getUserFavorites(): Promise<FavoriteProduct[]> {
-        return await fetchAPI<FavoriteProduct[]>(`${API_BASE_URL}/favorite`);
+        return await fetchAPI<FavoriteProduct[]>(`${API_BASE_URL}favorite`);
     },
 
     async getFavoriteCount(): Promise<number> {

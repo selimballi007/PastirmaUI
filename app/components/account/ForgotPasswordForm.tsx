@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
+import { useActionState, useEffect, useRef, useCallback, startTransition, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { forgotPasswordAction, type ActionState } from "@/app/lib/actions/auth";
@@ -22,12 +23,25 @@ export default function ForgotPasswordForm() {
         initialState
     );
 
-    // ✅ Başarılı gönderim sonrası form temizleme
+    // ✅ Manual processing state for immediate UI feedback
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    // ✅ Başarılı gönderim sonrası form temizleme ve yönlendirme
     useEffect(() => {
         if (state.success && state.message?.startsWith("✅")) {
+            // Clear processing state
+            setIsProcessing(false);
             formRef.current?.reset();
+
+            // Navigate to login page to prevent spam attacks
+            setTimeout(() => {
+                router.push('/account/login');
+            }, 2000); // 2 seconds delay to let user see the success message
+        } else if (state && !state.success && state.message) {
+            // Clear processing state on error
+            setIsProcessing(false);
         }
-    }, [state]);
+    }, [state.success, state.message, router]);
 
     // ✅ Get captcha token - useCallback ile memoize
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
@@ -45,13 +59,26 @@ export default function ForgotPasswordForm() {
 
     // ✅ Handle submit - useCallback ile memoize
     const handleSubmit = useCallback(async (formData: FormData) => {
-        const token = await getCaptchaToken();
-        if (!token) return;
-
-        formData.append('captchaToken', token);
-        startTransition(() => {
-            formAction(formData);
+        // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
+        flushSync(() => {
+            setIsProcessing(true);
         });
+
+        try {
+            const token = await getCaptchaToken();
+            if (!token) {
+                setIsProcessing(false);
+                return;
+            }
+
+            formData.append('captchaToken', token);
+            startTransition(() => {
+                formAction(formData);
+            });
+        } catch (error) {
+            console.error('[ForgotPasswordForm] Error:', error);
+            setIsProcessing(false);
+        }
     }, [getCaptchaToken, formAction]);
 
     return (
@@ -82,7 +109,7 @@ export default function ForgotPasswordForm() {
                         type="email"
                         autoComplete="email"
                         required
-                        disabled={isPending}
+                        disabled={isPending || isProcessing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="ornek@email.com"
                         aria-describedby={state.errors?.email ? "email-error" : undefined}
@@ -118,12 +145,12 @@ export default function ForgotPasswordForm() {
                 {/* Submit Button */}
                 <div className="pt-2">
                     <ButtonWithSpinner
-                        loading={isPending}
+                        loading={isPending || isProcessing}
                         type="submit"
                         variant="green"
                         className="w-full"
                     >
-                        {isPending ? "Gönderiliyor..." : "Şifre Sıfırlama Linki Gönder"}
+                        {(isPending || isProcessing) ? "Gönderiliyor..." : "Şifre Sıfırlama Linki Gönder"}
                     </ButtonWithSpinner>
                 </div>
 

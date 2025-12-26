@@ -9,7 +9,8 @@
       "Bash(npm uninstall:*)",
       "Bash(cat:*)",
       "Bash(dotnet add:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef database:*)"
     ]
   }
 }

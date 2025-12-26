@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useCallback, startTransition } from "react";
+import { useActionState, useEffect, useRef, useCallback, startTransition, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerAction, type ActionState } from "@/app/lib/actions/auth";
@@ -22,9 +23,25 @@ export default function RegisterFormClient() {
         initialState
     );
 
+    // ✅ Manual processing state for immediate UI feedback
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    // ✅ Debug: Log when isProcessing changes
+    useEffect(() => {
+        console.log('[RegisterForm] isProcessing changed to:', isProcessing);
+    }, [isProcessing]);
+
+    // ✅ Debug: Log when isPending changes
+    useEffect(() => {
+        console.log('[RegisterForm] isPending changed to:', isPending);
+    }, [isPending]);
+
     // ✅ Başarılı kayıt sonrası yönlendirme
     useEffect(() => {
         if (state.success) {
+            // Clear processing state
+            setIsProcessing(false);
+
             // Form'u temizle
             formRef.current?.reset();
 
@@ -34,8 +51,11 @@ export default function RegisterFormClient() {
             }, 3000);
 
             return () => clearTimeout(timeout);
+        } else if (state && !state.success && state.message) {
+            // ✅ Clear processing state on error
+            setIsProcessing(false);
         }
-    }, [state.success, router]);
+    }, [state.success, state.message, router]);
 
     // ✅ Get captcha token - useCallback ile memoize
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
@@ -53,13 +73,32 @@ export default function RegisterFormClient() {
 
     // ✅ Handle submit - useCallback ile memoize
     const handleSubmit = useCallback(async (formData: FormData) => {
-        const token = await getCaptchaToken();
-        if (!token) return;
+        console.log('[RegisterForm] Form submitted, setting isProcessing=true');
 
-        formData.append('captchaToken', token);
-        startTransition(() => {
-            formAction(formData);
+        // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
+        // Without this, React batches the state update and it happens AFTER captcha
+        flushSync(() => {
+            setIsProcessing(true);
         });
+
+        console.log('[RegisterForm] After flushSync, fetching captcha...');
+
+        try {
+            const token = await getCaptchaToken();
+            console.log('[RegisterForm] Captcha token received:', token ? 'success' : 'failed');
+            if (!token) {
+                setIsProcessing(false);
+                return;
+            }
+
+            formData.append('captchaToken', token);
+            startTransition(() => {
+                formAction(formData);
+            });
+        } catch (error) {
+            console.error('[RegisterForm] Error:', error);
+            setIsProcessing(false);
+        }
     }, [getCaptchaToken, formAction]);
 
     return (
@@ -84,7 +123,7 @@ export default function RegisterFormClient() {
                         type="text"
                         autoComplete="username"
                         required
-                        disabled={isPending}
+                        disabled={isPending || isProcessing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="kullaniciadi"
                         minLength={3}
@@ -109,7 +148,7 @@ export default function RegisterFormClient() {
                         type="email"
                         autoComplete="email"
                         required
-                        disabled={isPending}
+                        disabled={isPending || isProcessing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="ornek@email.com"
                         aria-describedby={state.errors?.email ? "email-error" : undefined}
@@ -132,7 +171,7 @@ export default function RegisterFormClient() {
                         type="password"
                         autoComplete="new-password"
                         required
-                        disabled={isPending}
+                        disabled={isPending || isProcessing}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="••••••••"
                         minLength={6}
@@ -168,12 +207,12 @@ export default function RegisterFormClient() {
                 {/* Submit Button */}
                 <div className="pt-2">
                     <ButtonWithSpinner
-                        loading={isPending}
+                        loading={isPending || isProcessing}
                         type="submit"
                         variant="green"
                         className="w-full"
                     >
-                        {isPending ? "Kaydediliyor..." : "Kayıt Ol"}
+                        {(isPending || isProcessing) ? "Kaydediliyor..." : "Kayıt Ol"}
                     </ButtonWithSpinner>
                 </div>
 

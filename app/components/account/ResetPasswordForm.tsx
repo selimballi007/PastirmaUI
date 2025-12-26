@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useCallback, useState, startTransition } from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resetPasswordAction, type ActionState } from "@/app/lib/actions/auth";
@@ -29,6 +30,9 @@ export default function ResetPasswordFormClient() {
         initialState
     );
 
+    // ✅ Manual processing state for immediate UI feedback
+    const [isProcessing, setIsProcessing] = useState(false);
+
     // ✅ Token kontrolü
     useEffect(() => {
         const urlToken = searchParams.get("token");
@@ -43,13 +47,19 @@ export default function ResetPasswordFormClient() {
     // ✅ Başarılı şifre sıfırlama sonrası login'e yönlendir
     useEffect(() => {
         if (state.success) {
+            // Clear processing state
+            setIsProcessing(false);
+
             const timeout = setTimeout(() => {
                 router.push('/account');
             }, 3000);
 
             return () => clearTimeout(timeout);
+        } else if (state && !state.success && state.message) {
+            // Clear processing state on error
+            setIsProcessing(false);
         }
-    }, [state.success, router]);
+    }, [state.success, state.message, router]);
 
     // ✅ Get captcha token
     const getCaptchaToken = useCallback(async (): Promise<string | null> => {
@@ -71,14 +81,27 @@ export default function ResetPasswordFormClient() {
             return;
         }
 
-        const captchaToken = await getCaptchaToken();
-        if (!captchaToken) return;
-
-        formData.append('token', token);
-        formData.append('captchaToken', captchaToken);
-        startTransition(() => {
-            formAction(formData);
+        // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
+        flushSync(() => {
+            setIsProcessing(true);
         });
+
+        try {
+            const captchaToken = await getCaptchaToken();
+            if (!captchaToken) {
+                setIsProcessing(false);
+                return;
+            }
+
+            formData.append('token', token);
+            formData.append('captchaToken', captchaToken);
+            startTransition(() => {
+                formAction(formData);
+            });
+        } catch (error) {
+            console.error('[ResetPasswordForm] Error:', error);
+            setIsProcessing(false);
+        }
     }, [token, getCaptchaToken, formAction]);
 
     // ✅ Token yoksa hata göster
@@ -153,7 +176,7 @@ export default function ResetPasswordFormClient() {
                             type={showPassword ? "text" : "password"}
                             autoComplete="new-password"
                             required
-                            disabled={isPending}
+                            disabled={isPending || isProcessing}
                             className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="••••••••"
                             minLength={6}
@@ -201,7 +224,7 @@ export default function ResetPasswordFormClient() {
                             type={showConfirmPassword ? "text" : "password"}
                             autoComplete="new-password"
                             required
-                            disabled={isPending}
+                            disabled={isPending || isProcessing}
                             className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="••••••••"
                             minLength={6}
@@ -248,12 +271,12 @@ export default function ResetPasswordFormClient() {
                 {/* Submit Button */}
                 <div className="pt-2">
                     <ButtonWithSpinner
-                        loading={isPending}
+                        loading={isPending || isProcessing}
                         type="submit"
                         variant="green"
                         className="w-full"
                     >
-                        {isPending ? "Kaydediliyor..." : "Şifreyi Güncelle"}
+                        {(isPending || isProcessing) ? "Kaydediliyor..." : "Şifreyi Güncelle"}
                     </ButtonWithSpinner>
                 </div>
 

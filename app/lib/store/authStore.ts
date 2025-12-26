@@ -1,7 +1,6 @@
 // lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { useFavoriteStore } from './favoriteStore'
 
 export interface User {
     id: number;
@@ -36,7 +35,17 @@ export const useAuthStore = create<AuthStore>()(
                     user,
                     error: null,
                 });
-                useFavoriteStore.getState().initializeFavorites();
+
+                // ✅ Load favorites after successful login
+                // Delay ensures cookies are properly set by the server action
+                setTimeout(async () => {
+                    try {
+                        const { initializeFavorites } = await import('./favoriteStore');
+                        initializeFavorites();
+                    } catch (error) {
+                        console.error('Failed to initialize favorites after login:', error);
+                    }
+                }, 2000);
             },
 
             logout: () => {
