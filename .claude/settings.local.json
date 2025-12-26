@@ -10,7 +10,12 @@
       "Bash(cat:*)",
       "Bash(dotnet add:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet ef database:*)"
+      "Bash(dotnet ef database:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet remove:*)",
+      "Bash(dotnet ef migrations:*)",
+      "Bash(dotnet user-secrets:*)"
     ]
   }
 }
