@@ -15,23 +15,26 @@ export interface Order {
     id: string;
     orderNumber: string;
     customerId: string;
-    customerName: string;
-    customerEmail: string;
+    userName: string;
+    userEmail: string;
     productId: string;
     productName: string;
     quantity: number;
-    amount: number;
-    status: OrderStatus;
-    createdAt: string;
-    updatedAt: string;
+    totalAmount: number;
+    orderStatus: OrderStatus;
+    createdDate: string;
+    updatedDate: string;
 }
 
+// Match backend C# enum values (serialized as numbers)
 export enum OrderStatus {
-    PENDING = 'pending',
-    PROCESSING = 'processing',
-    COMPLETED = 'completed',
-    CANCELLED = 'cancelled',
-    REFUNDED = 'refunded',
+    Pending = 0,
+    Confirmed = 1,
+    Preparing = 2,
+    Shipped = 3,
+    Delivered = 4,
+    Returned = 5,
+    Cancelled = 6,
 }
 
 export interface SalesDataPoint {

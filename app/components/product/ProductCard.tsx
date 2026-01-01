@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore';
+import { useCartStore } from '@/app/lib/store/cartStore';
 import {
     ShoppingCart,
     Heart,
@@ -14,6 +15,7 @@ import {
     Package,
     TrendingUp,
     MessageCircle,
+    Check,
 } from 'lucide-react';
 
 interface ProductCardProps {
@@ -63,9 +65,17 @@ export default function ProductCard({
     const isFavorite = useFavoriteStore((state) => state.isFavorite(id));
     const addToFavorites = useFavoriteStore((state) => state.addToFavorites);
     const removeFromFavorites = useFavoriteStore((state) => state.removeFromFavorites);
+    const addToCart = useCartStore((state) => state.addItem);
 
     const [favoriteLoading, setFavoriteLoading] = useState(false);
     const [imageError, setImageError] = useState(false);
+    const [showCartSuccess, setShowCartSuccess] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Fix hydration mismatch - only show favorite state after client hydration
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleToggleFavorite = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -113,7 +123,28 @@ export default function ProductCard({
     const handleAddToCart = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        onAddToCart?.(id);
+
+        try {
+            const discount = calculateDiscount();
+            addToCart({
+                productId: id,
+                productName: name,
+                productImage: imageUrl,
+                price,
+                stock: stock || 999,
+                discount: discount > 0 ? discount : undefined,
+                quantity: 1,
+            });
+
+            // Show success message
+            setShowCartSuccess(true);
+            setTimeout(() => setShowCartSuccess(false), 2000);
+
+            // Call optional callback if provided
+            onAddToCart?.(id);
+        } catch (error: any) {
+            alert(error.message || 'Sepete eklenirken bir hata oluştu.');
+        }
     };
 
     const handleQuickView = (e: React.MouseEvent) => {
@@ -168,6 +199,7 @@ export default function ProductCard({
                                 src={imageUrl}
                                 alt={name}
                                 fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                                 onError={() => setImageError(true)}
                             />
@@ -226,6 +258,7 @@ export default function ProductCard({
                                 src={imageUrl}
                                 alt={name}
                                 fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                                 onError={() => setImageError(true)}
                             />
@@ -253,7 +286,7 @@ export default function ProductCard({
                                 className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg disabled:opacity-50"
                             >
                                 <Heart
-                                    className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
+                                    className={`w-5 h-5 ${mounted && isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
                                         } ${favoriteLoading ? 'animate-pulse' : ''}`}
                                 />
                             </button>
@@ -268,7 +301,7 @@ export default function ProductCard({
                         </div>
 
                         {/* Stock warning */}
-                        {stock !== undefined && stock < 10 && stock > 0 && (
+                        {stock !== undefined && stock < 10 && stock > 0 && !showCartSuccess && (
                             <div className="absolute bottom-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                 Son {stock} adet!
                             </div>
@@ -278,6 +311,14 @@ export default function ProductCard({
                                 <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">
                                     Tükendi
                                 </span>
+                            </div>
+                        )}
+
+                        {/* Cart Success Indicator */}
+                        {showCartSuccess && (
+                            <div className="absolute bottom-4 left-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2 animate-fade-in">
+                                <Check className="w-5 h-5" />
+                                Sepete Eklendi!
                             </div>
                         )}
                     </div>
@@ -366,6 +407,7 @@ export default function ProductCard({
                             src={imageUrl}
                             alt={name}
                             fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             className="object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={() => setImageError(true)}
                         />
@@ -391,10 +433,10 @@ export default function ProductCard({
                             onClick={handleToggleFavorite}
                             disabled={favoriteLoading}
                             className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg disabled:opacity-50"
-                            title={isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+                            title={mounted && isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
                         >
                             <Heart
-                                className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
+                                className={`w-5 h-5 ${mounted && isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
                                     } ${favoriteLoading ? 'animate-pulse' : ''}`}
                             />
                         </button>
@@ -409,9 +451,17 @@ export default function ProductCard({
                     </div>
 
                     {/* Sales Badge (bottom left) */}
-                    {sales > 0 && (
+                    {sales > 0 && !showCartSuccess && (
                         <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
                             {sales}+ satış
+                        </div>
+                    )}
+
+                    {/* Cart Success Indicator */}
+                    {showCartSuccess && (
+                        <div className="absolute bottom-4 left-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2 animate-fade-in">
+                            <Check className="w-4 h-4" />
+                            Sepete Eklendi!
                         </div>
                     )}
                 </div>

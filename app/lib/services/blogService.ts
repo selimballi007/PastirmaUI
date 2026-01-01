@@ -15,28 +15,28 @@ import type {
 export const blogService = {
     /**
      * Get all blog posts
-     * GET /BlogPost
+     * GET /blog-post
      */
     async getBlogPosts(includeInactive = false): Promise<BlogPostListItem[]> {
         const params = includeInactive ? '?includeInactive=true' : '?includeInactive=false';
-        return await fetchAPI<BlogPostListItem[]>(`BlogPost${params}`);
+        return await fetchAPI<BlogPostListItem[]>(`blog-post${params}`);
     },
 
     /**
      * Get blog post by ID
-     * GET /BlogPost/{id}
+     * GET /blog-post/{id}
      */
     async getBlogPostById(id: number, incrementView = false): Promise<BlogPost> {
         const params = incrementView ? '?incrementView=true' : '?incrementView=false';
-        return await fetchAPI<BlogPost>(`BlogPost/${id}${params}`);
+        return await fetchAPI<BlogPost>(`blog-post/${id}${params}`);
     },
 
     /**
      * Create new blog post
-     * POST /BlogPost
+     * POST /blog-post
      */
     async createBlogPost(post: CreateBlogPostRequest): Promise<BlogPost> {
-        return await fetchAPI<BlogPost>('BlogPost', {
+        return await fetchAPI<BlogPost>('blog-post', {
             method: 'POST',
             body: JSON.stringify(post),
         });
@@ -44,10 +44,10 @@ export const blogService = {
 
     /**
      * Update blog post
-     * PUT /BlogPost/{id}
+     * PUT /blog-post/{id}
      */
     async updateBlogPost(id: number, post: UpdateBlogPostRequest): Promise<BlogPost> {
-        return await fetchAPI<BlogPost>(`BlogPost/${id}`, {
+        return await fetchAPI<BlogPost>(`blog-post/${id}`, {
             method: 'PUT',
             body: JSON.stringify(post),
         });
@@ -55,69 +55,69 @@ export const blogService = {
 
     /**
      * Delete blog post
-     * DELETE /BlogPost/{id}
+     * DELETE /blog-post/{id}
      */
     async deleteBlogPost(id: number): Promise<void> {
-        await fetchAPI(`BlogPost/${id}`, { method: 'DELETE' });
+        await fetchAPI(`blog-post/${id}`, { method: 'DELETE' });
     },
 
     /**
      * Toggle blog post status (active/inactive)
-     * PUT /BlogPost/{id}/toggle-status
+     * PUT /blog-post/{id}/toggle-status
      */
     async togglePostStatus(id: number): Promise<void> {
-        await fetchAPI(`BlogPost/${id}/toggle-status`, { method: 'PUT' });
+        await fetchAPI(`blog-post/${id}/toggle-status`, { method: 'PUT' });
     },
 
     /**
      * Toggle blog post featured status
-     * PUT /BlogPost/{id}/toggle-featured
+     * PUT /blog-post/{id}/toggle-featured
      */
     async toggleFeatured(id: number): Promise<void> {
-        await fetchAPI(`BlogPost/${id}/toggle-featured`, { method: 'PUT' });
+        await fetchAPI(`blog-post/${id}/toggle-featured`, { method: 'PUT' });
     },
 
     /**
      * Get published blog posts (for public viewing)
-     * GET /BlogPost/published
+     * GET /blog-post/published
      */
     async getPublishedPosts(): Promise<BlogPostListItem[]> {
-        return await fetchAPI<BlogPostListItem[]>('BlogPost/published');
+        return await fetchAPI<BlogPostListItem[]>('blog-post/published');
     },
 
     /**
      * Get featured blog posts (for homepage)
-     * GET /BlogPost/featured
+     * GET /blog-post/featured
      */
     async getFeaturedPosts(): Promise<BlogPostListItem[]> {
-        return await fetchAPI<BlogPostListItem[]>('BlogPost/featured');
+        return await fetchAPI<BlogPostListItem[]>('blog-post/featured');
     },
 
     // Blog Category functions
 
     /**
      * Get all blog categories
-     * GET /BlogCategory
+     * GET /blog-category
      */
     async getBlogCategories(includeInactive = false): Promise<BlogCategory[]> {
         const params = includeInactive ? '?includeInactive=true' : '?includeInactive=false';
-        return await fetchAPI<BlogCategory[]>(`BlogCategory${params}`);
+        return await fetchAPI<BlogCategory[]>(`blog-category${params}`);
     },
 
     /**
      * Get blog category by ID
-     * GET /BlogCategory/{id}
+     * GET /blog-category/{id}
      */
     async getBlogCategoryById(id: number): Promise<BlogCategory> {
-        return await fetchAPI<BlogCategory>(`BlogCategory/${id}`);
+        return await fetchAPI<BlogCategory>(`blog-category/${id}`);
     },
 
     /**
      * Create new blog category
-     * POST /BlogCategory
+     * POST /blog-category
      */
     async createBlogCategory(category: CreateBlogCategoryRequest): Promise<BlogCategory> {
-        return await fetchAPI<BlogCategory>('BlogCategory', {
+        return await fetchAPI<BlogCategory>('blog-category', {
             method: 'POST',
             body: JSON.stringify(category),
         });
@@ -125,10 +125,10 @@ export const blogService = {
 
     /**
      * Update blog category
-     * PUT /BlogCategory/{id}
+     * PUT /blog-category/{id}
      */
     async updateBlogCategory(id: number, category: CreateBlogCategoryRequest): Promise<BlogCategory> {
-        return await fetchAPI<BlogCategory>(`BlogCategory/${id}`, {
+        return await fetchAPI<BlogCategory>(`blog-category/${id}`, {
             method: 'PUT',
             body: JSON.stringify(category),
         });
@@ -136,17 +136,17 @@ export const blogService = {
 
     /**
      * Delete blog category
-     * DELETE /BlogCategory/{id}
+     * DELETE /blog-category/{id}
      */
     async deleteBlogCategory(id: number): Promise<void> {
-        await fetchAPI(`BlogCategory/${id}`, { method: 'DELETE' });
+        await fetchAPI(`blog-category/${id}`, { method: 'DELETE' });
     },
 
     /**
      * Get active blog categories
-     * GET /BlogCategory/active
+     * GET /blog-category/active
      */
     async getActiveCategories(): Promise<BlogCategory[]> {
-        return await fetchAPI<BlogCategory[]>('BlogCategory/active');
+        return await fetchAPI<BlogCategory[]>('blog-category/active');
     },
 };

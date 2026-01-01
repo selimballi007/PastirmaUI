@@ -15,7 +15,8 @@ import {
     RefreshCw,
 } from 'lucide-react';
 import { useDashboard } from '@/app/lib/hooks/useDashboard';
-import type { Order } from '@/app/types/dashboard';
+import type { Order } from '@/app/types/order';
+import { OrderStatus, OrderStatusLabels } from '@/app/types/order';
 
 interface StatCard {
     title: string;
@@ -57,41 +58,45 @@ export default function DashboardPage() {
         });
     };
 
-    const getStatusIcon = (status: Order['status']) => {
+    const getStatusIcon = (status: OrderStatus) => {
         switch (status) {
-            case 'completed':
+            case OrderStatus.Delivered:
                 return <CheckCircle className="w-5 h-5 text-green-500" />;
-            case 'pending':
-            case 'processing':
+            case OrderStatus.Pending:
+            case OrderStatus.Confirmed:
+            case OrderStatus.Preparing:
                 return <Clock className="w-5 h-5 text-yellow-500" />;
-            case 'cancelled':
-            case 'refunded':
+            case OrderStatus.Shipped:
+                return <Package className="w-5 h-5 text-blue-500" />;
+            case OrderStatus.Cancelled:
+            case OrderStatus.Returned:
                 return <XCircle className="w-5 h-5 text-red-500" />;
             default:
                 return <AlertCircle className="w-5 h-5 text-gray-500" />;
         }
     };
 
-    const getStatusText = (status: Order['status']): string => {
-        const statusMap: Record<Order['status'], string> = {
-            pending: 'Beklemede',
-            processing: 'İşleniyor',
-            completed: 'Tamamlandı',
-            cancelled: 'İptal Edildi',
-            refunded: 'İade Edildi',
-        };
-        return statusMap[status] || status;
+    const getStatusText = (status: OrderStatus): string => {
+        return OrderStatusLabels[status] || 'Bilinmeyen';
     };
 
-    const getStatusStyle = (status: Order['status']): string => {
-        const styleMap: Record<Order['status'], string> = {
-            pending: 'bg-yellow-100 text-yellow-800',
-            processing: 'bg-blue-100 text-blue-800',
-            completed: 'bg-green-100 text-green-800',
-            cancelled: 'bg-red-100 text-red-800',
-            refunded: 'bg-gray-100 text-gray-800',
-        };
-        return styleMap[status] || 'bg-gray-100 text-gray-800';
+    const getStatusStyle = (status: OrderStatus): string => {
+        switch (status) {
+            case OrderStatus.Delivered:
+                return 'bg-green-100 text-green-800';
+            case OrderStatus.Pending:
+                return 'bg-yellow-100 text-yellow-800';
+            case OrderStatus.Confirmed:
+            case OrderStatus.Preparing:
+                return 'bg-blue-100 text-blue-800';
+            case OrderStatus.Shipped:
+                return 'bg-purple-100 text-purple-800';
+            case OrderStatus.Cancelled:
+            case OrderStatus.Returned:
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
     if (loading) {
@@ -341,9 +346,6 @@ export default function DashboardPage() {
                                         Müşteri
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Ürün
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Tutar
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -365,31 +367,25 @@ export default function DashboardPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm">
-                                                <div className="font-medium text-gray-900">{order.customerName}</div>
-                                                <div className="text-gray-500">{order.customerEmail}</div>
+                                                <div className="font-medium text-gray-900">{order.userName}</div>
+                                                <div className="text-gray-500">{order.userEmail}</div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {order.productName}
-                                            {order.quantity > 1 && (
-                                                <span className="ml-1 text-gray-500">x{order.quantity}</span>
-                                            )}
-                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {formatCurrency(order.amount)}
+                                            {formatCurrency(order.totalAmount)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(
-                                                    order.status
+                                                    order.orderStatus
                                                 )}`}
                                             >
-                                                {getStatusIcon(order.status)}
-                                                <span className="ml-1">{getStatusText(order.status)}</span>
+                                                {getStatusIcon(order.orderStatus)}
+                                                <span className="ml-1">{getStatusText(order.orderStatus)}</span>
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {formatDate(order.createdAt)}
+                                            {formatDate(order.createdDate)}
                                         </td>
                                     </tr>
                                 ))}

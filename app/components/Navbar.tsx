@@ -9,14 +9,13 @@ import { MdLogout, MdDashboard } from 'react-icons/md'
 import { useAuthStore } from '@/app/lib/store/authStore'
 import { Heart } from 'lucide-react'
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore'
+import { useCartStore } from '@/app/lib/store/cartStore'
 import { useAuthActions } from '@/app/lib/hooks'
 import { usePathname } from 'next/navigation'
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-    const [cartTotal, setCartTotal] = useState(0)
-    const [cartItemCount, setCartItemCount] = useState(0)
 
     // ✅ Hydration hatası için mounted state
     const [mounted, setMounted] = useState(false)
@@ -28,20 +27,16 @@ export default function Navbar() {
 
     const favoriteCount = useFavoriteStore((state) => state.favoriteCount)
 
+    // ✅ Cart store'dan sepet bilgilerini al
+    const cartItemCount = useCartStore((state) => state.getTotalItems())
+    const cartTotal = useCartStore((state) => state.getTotalPrice())
+
+    // ✅ Determine account URL based on user role
+    const accountUrl = user?.role === 'Admin' ? '/dashboard' : '/account'
+
     // ✅ Component mount olduğunda set et
     useEffect(() => {
         setMounted(true)
-    }, [])
-
-    // ✅ Favorites are now loaded ONLY after successful login in authStore
-    // This prevents 401 errors when refreshing the page with expired tokens
-
-    // Sepet bilgilerini al
-    useEffect(() => {
-        const storedTotal = "3"//localStorage.getItem('cartTotal')
-        const storedCount = "15"//localStorage.getItem('cartItemCount')
-        setCartTotal(storedTotal ? parseFloat(storedTotal) : 0)
-        setCartItemCount(storedCount ? parseInt(storedCount) : 0)
     }, [])
 
     // ✅ Logout işlemi
@@ -61,11 +56,9 @@ export default function Navbar() {
 
                     {/* Desktop menü (sağa yaslı) */}
                     <div className="hidden md:flex flex-1 justify-end space-x-6 mr-10">
-                        <Link href="/" className="text-gray-700 hover:text-gray-900">Anasayfa</Link>
                         <Link href="/products" className="text-gray-700 hover:text-gray-900">Ürünler</Link>
                         <Link href="/about" className="text-gray-700 hover:text-gray-900">Hakkımızda</Link>
                         <Link href="/contact" className="text-gray-700 hover:text-gray-900">İletişim</Link>
-                        <Link href="/test-token" className="text-gray-700 hover:text-gray-900">Test</Link>
                     </div>
 
                     {/* Sağ üst alan */}
@@ -127,7 +120,7 @@ export default function Navbar() {
                                             </div>
 
                                             <Link
-                                                href="/dashboard"
+                                                href={accountUrl}
                                                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 onClick={() => setIsUserMenuOpen(false)}
                                             >
@@ -186,13 +179,6 @@ export default function Navbar() {
                 {isMenuOpen && (
                     <div className="md:hidden mt-2 space-y-2 pb-4">
                         <Link
-                            href="/"
-                            className="block text-gray-700 hover:text-gray-900 py-2"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Anasayfa
-                        </Link>
-                        <Link
                             href="/products"
                             className="block text-gray-700 hover:text-gray-900 py-2"
                             onClick={() => setIsMenuOpen(false)}
@@ -213,20 +199,6 @@ export default function Navbar() {
                         >
                             İletişim
                         </Link>
-                        <Link
-                            href="/dashboard"
-                            className="block text-gray-700 hover:text-gray-900 py-2"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            DashBoard
-                        </Link>
-                        <Link
-                            href="/test-token"
-                            className="block text-gray-700 hover:text-gray-900 py-2"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Test
-                        </Link>
 
                         {/* Mobilde sepet toplam */}
                         <div className="py-2">
@@ -244,7 +216,7 @@ export default function Navbar() {
                                         <p className="text-xs text-gray-500">{user.email}</p>
                                     </div>
                                     <Link
-                                        href="/dashboard"
+                                        href={accountUrl}
                                         className="block px-2 py-2 text-gray-700 hover:bg-gray-100 rounded"
                                         onClick={() => setIsMenuOpen(false)}
                                     >

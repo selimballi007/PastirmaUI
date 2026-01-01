@@ -44,7 +44,7 @@ export default function EditBlogPage() {
                 title: post.title,
                 content: post.content,
                 excerpt: post.excerpt,
-                imageUrl: post.imageUrl,
+                imageUrl: post.imageUrl || '',
                 categoryId: post.categoryId,
                 publishedDate: post.publishedDate,
                 isFeatured: post.isFeatured,
@@ -172,7 +172,7 @@ export default function EditBlogPage() {
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) =>
-                                    setFormData({ ...formData, title: e.target.value })
+                                    setFormData((prev) => ({ ...prev, title: e.target.value }))
                                 }
                                 placeholder="Blog başlığı..."
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -188,7 +188,7 @@ export default function EditBlogPage() {
                             <textarea
                                 value={formData.excerpt}
                                 onChange={(e) =>
-                                    setFormData({ ...formData, excerpt: e.target.value })
+                                    setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
                                 }
                                 placeholder="Kısa özet..."
                                 rows={3}
@@ -208,7 +208,7 @@ export default function EditBlogPage() {
                             </label>
                             <TipTapEditor
                                 content={formData.content}
-                                onChange={(html) => setFormData({ ...formData, content: html })}
+                                onChange={(html) => setFormData((prev) => ({ ...prev, content: html }))}
                             />
                         </div>
                     </div>
@@ -223,10 +223,10 @@ export default function EditBlogPage() {
                             <select
                                 value={formData.categoryId}
                                 onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
+                                    setFormData((prev) => ({
+                                        ...prev,
                                         categoryId: parseInt(e.target.value),
-                                    })
+                                    }))
                                 }
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required
@@ -246,11 +246,16 @@ export default function EditBlogPage() {
                                 Görsel URL
                             </label>
                             <input
-                                type="url"
-                                value={formData.imageUrl}
+                                type="text"
+                                value={formData.imageUrl || ''}
                                 onChange={(e) =>
-                                    setFormData({ ...formData, imageUrl: e.target.value })
+                                    setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))
                                 }
+                                onPaste={(e) => {
+                                    e.preventDefault();
+                                    const pastedText = e.clipboardData.getData('text');
+                                    setFormData((prev) => ({ ...prev, imageUrl: pastedText }));
+                                }}
                                 placeholder="https://..."
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -272,10 +277,10 @@ export default function EditBlogPage() {
                                 type="datetime-local"
                                 value={formData.publishedDate || ''}
                                 onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
+                                    setFormData((prev) => ({
+                                        ...prev,
                                         publishedDate: e.target.value || null,
-                                    })
+                                    }))
                                 }
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -291,7 +296,7 @@ export default function EditBlogPage() {
                                     type="checkbox"
                                     checked={formData.isFeatured}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, isFeatured: e.target.checked })
+                                        setFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))
                                     }
                                     className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                                 />

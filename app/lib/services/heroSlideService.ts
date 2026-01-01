@@ -1,5 +1,7 @@
 // app/lib/services/heroSlideService.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+'use client';
+
+import { fetchAPI } from '@/app/lib/api/client';
 
 export interface HeroSlide {
     id: number;
@@ -39,105 +41,45 @@ export interface UpdateHeroSlideDto {
     bgColor: string;
 }
 
-class HeroSlideService {
-    private getAuthHeaders(): HeadersInit {
-        const token = localStorage.getItem('accessToken');
-        return {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-        };
-    }
-
+export const heroSlideService = {
     async getAllSlides(): Promise<HeroSlide[]> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide`, {
-            headers: this.getAuthHeaders(),
-        });
-
-        if (!response.ok) {
-            throw new Error('Slide\'lar yüklenirken bir hata oluştu');
-        }
-
-        return response.json();
-    }
+        return await fetchAPI<HeroSlide[]>('hero-slide');
+    },
 
     async getSlideById(id: number): Promise<HeroSlide> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide/${id}`, {
-            headers: this.getAuthHeaders(),
-        });
-
-        if (!response.ok) {
-            throw new Error('Slide bulunamadı');
-        }
-
-        return response.json();
-    }
+        return await fetchAPI<HeroSlide>(`hero-slide/${id}`);
+    },
 
     async createSlide(data: CreateHeroSlideDto): Promise<HeroSlide> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide`, {
+        return await fetchAPI<HeroSlide>('hero-slide', {
             method: 'POST',
-            headers: this.getAuthHeaders(),
             body: JSON.stringify(data),
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Slide oluşturulurken bir hata oluştu');
-        }
-
-        return response.json();
-    }
+    },
 
     async updateSlide(id: number, data: UpdateHeroSlideDto): Promise<HeroSlide> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide/${id}`, {
+        return await fetchAPI<HeroSlide>(`hero-slide/${id}`, {
             method: 'PUT',
-            headers: this.getAuthHeaders(),
             body: JSON.stringify(data),
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Slide güncellenirken bir hata oluştu');
-        }
-
-        return response.json();
-    }
+    },
 
     async deleteSlide(id: number): Promise<void> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide/${id}`, {
+        await fetchAPI(`hero-slide/${id}`, {
             method: 'DELETE',
-            headers: this.getAuthHeaders(),
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Slide silinirken bir hata oluştu');
-        }
-    }
+    },
 
     async toggleSlideStatus(id: number): Promise<{ message: string; isActive: boolean }> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide/${id}/toggle-status`, {
+        return await fetchAPI<{ message: string; isActive: boolean }>(`hero-slide/${id}/toggle-status`, {
             method: 'PUT',
-            headers: this.getAuthHeaders(),
         });
-
-        if (!response.ok) {
-            throw new Error('Durum değiştirilirken bir hata oluştu');
-        }
-
-        return response.json();
-    }
+    },
 
     async reorderSlides(slides: { id: number; displayOrder: number }[]): Promise<void> {
-        const response = await fetch(`${API_BASE_URL}/hero-slide/reorder`, {
+        await fetchAPI('hero-slide/reorder', {
             method: 'PUT',
-            headers: this.getAuthHeaders(),
             body: JSON.stringify(slides),
         });
-
-        if (!response.ok) {
-            throw new Error('Sıralama güncellenirken bir hata oluştu');
-        }
-    }
-}
-
-export const heroSlideService = new HeroSlideService();
+    },
+};

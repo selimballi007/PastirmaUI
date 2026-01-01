@@ -33,6 +33,7 @@ export default function TipTapEditor({ content, onChange, placeholder = 'İçeri
             Image,
         ],
         content,
+        immediatelyRender: false,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
         },

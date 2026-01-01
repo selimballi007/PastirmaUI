@@ -16,6 +16,7 @@ import {
     Star,
 } from 'lucide-react';
 import { productService } from '@/app/lib/services/productService';
+import { cloudinaryService, extractPublicId } from '@/app/lib/services/cloudinaryService';
 import type { CreateProductRequest, UpdateProductRequest } from '@/app/types/dashboard';
 import { useCategoryStore } from '@/app/lib/store/categoryStore';
 import type { ProductImage } from '@/app/types/dashboard';
@@ -44,6 +45,7 @@ interface FormErrors {
     oldPrice?: string;
     stock?: string;
     categoryId?: string;
+    imageUrl?: string;
     images?: string;
 }
 
@@ -149,9 +151,9 @@ export default function ProductFormPage() {
             newErrors.categoryId = 'Kategori seçimi gereklidir';
         }
 
-        // ✅ En az 1 görsel zorunlu
-        if (formData.images.length === 0) {
-            newErrors.images = 'En az 1 ürün görseli gereklidir';
+        // ✅ Ana görsel zorunlu
+        if (!formData.imageUrl || formData.imageUrl.trim() === '') {
+            newErrors.imageUrl = 'Ana görsel gereklidir. Lütfen bir ana görsel ekleyin veya ürün görsellerinden birini yıldız ikonuna tıklayarak ana görsel olarak belirleyin.';
         }
 
         setErrors(newErrors);
@@ -169,10 +171,6 @@ export default function ProductFormPage() {
             setSaving(true);
             setError(null);
 
-            // ✅ Primary image'ı imageUrl'e ata (cache)
-            const primaryImage = formData.images.find(img => img.isPrimary);
-            const primaryImageUrl = primaryImage?.imageUrl || formData.images[0]?.imageUrl || '';
-
             const productData = {
                 name: formData.name.trim(),
                 description: formData.description.trim() || undefined,
@@ -180,7 +178,7 @@ export default function ProductFormPage() {
                 oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : undefined,
                 stock: parseInt(formData.stock),
                 categoryId: parseInt(formData.categoryId),
-                imageUrl: primaryImageUrl, // ✅ Primary image cache
+                imageUrl: formData.imageUrl, // ✅ Use imageUrl directly from form
                 images: formData.images, // ✅ Tüm görseller
                 isActive: formData.isActive,
                 isCampaign: formData.isCampaign,
@@ -229,15 +227,24 @@ export default function ProductFormPage() {
     const handleAddImage = (imageUrl: string) => {
         const newImage: ProductImage = {
             imageUrl,
-            displayOrder: formData.images.length + 1,
-            isPrimary: formData.images.length === 0, // İlk görsel otomatik primary
+            displayOrder: 0, // Will be renumbered below
+            isPrimary: false, // Don't auto-assign primary
         };
 
-        setFormData(prev => ({
-            ...prev,
-            images: [...prev.images, newImage],
-            imageUrl: formData.images.length === 0 ? imageUrl : prev.imageUrl, // İlk görsel imageUrl'e ata
-        }));
+        setFormData(prev => {
+            // Add new image and renumber all images sequentially using prev state
+            const updatedImages = [...prev.images, newImage];
+            const renumberedImages = updatedImages.map((img, i) => ({
+                ...img,
+                displayOrder: i + 1,
+            }));
+
+            return {
+                ...prev,
+                images: renumberedImages,
+                // Don't auto-assign main image - user must click star icon
+            };
+        });
 
         // Clear error
         if (errors.images) {
@@ -256,15 +263,11 @@ export default function ProductFormPage() {
             displayOrder: i + 1,
         }));
 
-        // Eğer silinen primary ise, ilk görseli primary yap
-        if (removedImage.isPrimary && reorderedImages.length > 0) {
-            reorderedImages[0].isPrimary = true;
-        }
-
         setFormData(prev => ({
             ...prev,
             images: reorderedImages,
-            imageUrl: reorderedImages.find(img => img.isPrimary)?.imageUrl || reorderedImages[0]?.imageUrl || '',
+            // Only clear main imageUrl if the removed image was the main image
+            imageUrl: prev.imageUrl === removedImage.imageUrl ? '' : prev.imageUrl,
         }));
     };
 
@@ -280,6 +283,77 @@ export default function ProductFormPage() {
             images: updatedImages,
             imageUrl: updatedImages[index].imageUrl, // ✅ Cache güncelle
         }));
+
+        // Clear imageUrl error when main image is set
+        if (errors.imageUrl) {
+            setErrors(prev => ({ ...prev, imageUrl: undefined }));
+        }
+    };
+
+    // ✅ Ana görseli Cloudinary'den sil
+    const handleDeleteMainImage = async () => {
+        if (!formData.imageUrl) return;
+
+        const confirmDelete = window.confirm('Ana görseli silmek istediğinizden emin misiniz?');
+        if (!confirmDelete) return;
+
+        try {
+            const publicId = extractPublicId(formData.imageUrl);
+            if (publicId) {
+                try {
+                    // Try to delete from Cloudinary
+                    await cloudinaryService.deleteImage(publicId, false);
+                    console.log('Image deleted from Cloudinary:', publicId);
+                } catch (cloudinaryError: any) {
+                    // If image not found in Cloudinary, that's okay - it might have been deleted already
+                    if (cloudinaryError.message?.includes('not found')) {
+                        console.warn('Image not found in Cloudinary (might be already deleted):', publicId);
+                    } else {
+                        // For other errors, log but continue with form removal
+                        console.error('Error deleting from Cloudinary:', cloudinaryError);
+                    }
+                }
+            }
+
+            // Always clear from form, even if Cloudinary deletion failed
+            setFormData(prev => ({ ...prev, imageUrl: '' }));
+        } catch (error) {
+            console.error('Error in handleDeleteMainImage:', error);
+            alert('Beklenmeyen bir hata oluştu.');
+        }
+    };
+
+    // ✅ Ürün görselini Cloudinary'den sil
+    const handleDeleteProductImage = async (index: number) => {
+        const imageToDelete = formData.images[index];
+
+        const confirmDelete = window.confirm('Bu görseli silmek istediğinizden emin misiniz?');
+        if (!confirmDelete) return;
+
+        try {
+            const publicId = extractPublicId(imageToDelete.imageUrl);
+            if (publicId) {
+                try {
+                    // Try to delete from Cloudinary
+                    await cloudinaryService.deleteImage(publicId, false);
+                    console.log('Image deleted from Cloudinary:', publicId);
+                } catch (cloudinaryError: any) {
+                    // If image not found in Cloudinary, that's okay - it might have been deleted already
+                    if (cloudinaryError.message?.includes('not found')) {
+                        console.warn('Image not found in Cloudinary (might be already deleted):', publicId);
+                    } else {
+                        // For other errors, log but continue with form removal
+                        console.error('Error deleting from Cloudinary:', cloudinaryError);
+                    }
+                }
+            }
+
+            // Always remove from form, even if Cloudinary deletion failed
+            handleRemoveImage(index);
+        } catch (error) {
+            console.error('Error in handleDeleteProductImage:', error);
+            alert('Beklenmeyen bir hata oluştu.');
+        }
     };
 
     const calculateDiscount = () => {
@@ -642,21 +716,91 @@ export default function ProductFormPage() {
                         </div>
                     </div>
 
+                    {/* ✅ Main Image Section */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                            Ana Görsel <span className="text-red-500">*</span>
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-6">
+                            Bu görsel ürün kartlarında gösterilecektir.
+                        </p>
+
+                        {/* Current Main Image */}
+                        {formData.imageUrl && (
+                            <div className="mb-6">
+                                <div className="relative max-w-sm rounded-lg overflow-hidden border-2 border-blue-500 ring-2 ring-blue-200 group">
+                                    <div className="aspect-square bg-gray-100">
+                                        <img
+                                            src={formData.imageUrl}
+                                            alt="Ana görsel"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold flex items-center space-x-1">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        <span>Ana Görsel</span>
+                                    </div>
+                                    {/* Delete Button */}
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteMainImage}
+                                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Ana görseli sil"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Empty State for Main Image */}
+                        {!formData.imageUrl && (
+                            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                                <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 text-sm">Ana görsel henüz yüklenmedi</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Aşağıdaki bölümden görsel ekleyip yıldız ikonuna tıklayarak ana görsel belirleyin
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Error Message */}
+                        {errors.imageUrl && (
+                            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                                <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-600">{errors.imageUrl}</p>
+                            </div>
+                        )}
+                    </div>
+
                     {/* ✅ Multiple Images Section */}
                     <div className="bg-white rounded-lg shadow-sm p-6">
                         <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                            Ürün Görselleri <span className="text-red-500">*</span>
+                            Ürün Görselleri
                         </h2>
                         <p className="text-sm text-gray-600 mb-6">
-                            En az 1, en fazla 5 görsel ekleyebilirsiniz. İlk görsel ana görsel olarak kullanılacaktır.
+                            Ürün detay sayfasında gösterilecek görselleri ekleyin. Bir görseli ana görsel olarak belirlemek için yıldız ikonuna tıklayın.
                         </p>
 
                         {/* Upload Button */}
                         {formData.images.length < 5 && (
                             <CldUploadWidget
-                                uploadPreset="prodimage"
+                                uploadPreset="productimages"
                                 onSuccess={(result: any) => {
-                                    handleAddImage(result.info.secure_url);
+                                    console.log('Upload successful:', result);
+                                    const imageUrl = result.info.secure_url;
+                                    console.log('Image URL:', imageUrl);
+                                    handleAddImage(imageUrl);
+                                    alert('Görsel başarıyla yüklendi!');
+                                }}
+                                onError={(error: any) => {
+                                    console.error('Upload error:', error);
+                                    alert('Görsel yüklenirken hata oluştu: ' + error.message);
+                                }}
+                                options={{
+                                    folder: 'products',
+                                    resourceType: 'image',
+                                    maxFileSize: 5000000, // 5MB
                                 }}
                             >
                                 {({ open }) => (
@@ -726,7 +870,7 @@ export default function ProductFormPage() {
                                             )}
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveImage(index)}
+                                                onClick={() => handleDeleteProductImage(index)}
                                                 className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
                                                 title="Sil"
                                             >

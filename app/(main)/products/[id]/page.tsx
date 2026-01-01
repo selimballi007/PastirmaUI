@@ -239,7 +239,10 @@ export default async function ProductDetailPage({ params }: Props) {
                             productId={product.id}
                             productName={product.name}
                             productDescription={product.description}
+                            productImage={product.imageUrl}
+                            price={product.price}
                             stock={product.stock}
+                            discount={discount > 0 ? discount : undefined}
                         />
 
                         {/* Features */}

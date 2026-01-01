@@ -2,6 +2,7 @@
 'use client';
 
 import ProductCard from '@/app/components/product/ProductCard';
+import Link from 'next/link';
 import { Package, TrendingUp } from 'lucide-react';
 import type { Product } from '@/app/types/dashboard';
 
@@ -75,8 +76,8 @@ export default function BestSellers({ products }: BestSellersProps) {
 
                 {/* View All Button */}
                 <div className="text-center mt-12">
-                    <a
-                        href="/products/best-sellers"
+                    <Link
+                        href="/products?filter=best-sellers"
                         className="inline-flex items-center space-x-2 px-8 py-3 bg-gray-900 text-white rounded-lg hover:bg-black transition-colors shadow-lg hover:shadow-xl"
                     >
                         <span className="font-semibold">Tümünü Gör</span>
@@ -93,7 +94,7 @@ export default function BestSellers({ products }: BestSellersProps) {
                                 d="M17 8l4 4m0 0l-4 4m4-4H3"
                             />
                         </svg>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </section >

@@ -57,7 +57,7 @@ export const dashboardService = {
      */
     async getOrderDetails(orderId: string): Promise<Order> {
         console.log('[dashboardService] Getting order details, id:', orderId);
-        return await fetchAPI<Order>(`orders/${orderId}`);
+        return await fetchAPI<Order>(`order/${orderId}`);
     },
 
     /**
@@ -76,7 +76,7 @@ export const dashboardService = {
         });
 
         console.log('[dashboardService] Getting orders with params:', params.toString());
-        return await fetchAPI<PaginatedResponse<Order>>(`orders?${params.toString()}`);
+        return await fetchAPI<PaginatedResponse<Order>>(`order?${params.toString()}`);
     },
 
     /**
@@ -85,7 +85,7 @@ export const dashboardService = {
      */
     async updateOrderStatus(orderId: string, status: string) {
         console.log('[dashboardService] Updating order status:', orderId, status);
-        return await fetchAPI(`orders/${orderId}/status`, {
+        return await fetchAPI(`order/${orderId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         });

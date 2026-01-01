@@ -1,6 +1,7 @@
 // app/lib/services/favoriteService.ts
-import { fetchAPI } from '@/app/lib/api/client'
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+'use client';
+
+import { fetchAPI } from '@/app/lib/api/client';
 
 export interface FavoriteProduct {
     id: number;
@@ -20,30 +21,28 @@ export interface FavoriteProduct {
 
 export const favoriteService = {
     async addToFavorites(productId: number): Promise<void> {
-        const response = await fetchAPI(`${API_BASE_URL}/favorite/${productId}`, {
+        await fetchAPI(`favorite/${productId}`, {
             method: 'POST'
         });
     },
 
     async removeFromFavorites(productId: number): Promise<void> {
-        const response = await fetchAPI(`${API_BASE_URL}/favorite/${productId}`, {
+        await fetchAPI(`favorite/${productId}`, {
             method: 'DELETE'
         });
     },
 
     async isFavorite(productId: number): Promise<boolean> {
-
-        const response = await fetchAPI<{ isFavorite: boolean }>(`${API_BASE_URL}/favorite/check/${productId}`);
+        const response = await fetchAPI<{ isFavorite: boolean }>(`favorite/check/${productId}`);
         return response.isFavorite;
-
     },
 
     async getUserFavorites(): Promise<FavoriteProduct[]> {
-        return await fetchAPI<FavoriteProduct[]>(`${API_BASE_URL}favorite`);
+        return await fetchAPI<FavoriteProduct[]>('favorite');
     },
 
     async getFavoriteCount(): Promise<number> {
-        const response = await fetchAPI<{ count: number }>(`${API_BASE_URL}/favorite/count`);
+        const response = await fetchAPI<{ count: number }>('favorite/count');
         return response.count;
     }
-}
+};

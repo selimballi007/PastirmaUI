@@ -13,6 +13,7 @@ import {
     Folder,
     X,
     BookOpen,
+    Mail,
 } from 'lucide-react';
 import DashboardSidebar from '@/app/components/dashboard/DashboardSidebar'
 import DashboardNavbar from '@/app/components/dashboard/DashboardNavbar'
@@ -35,6 +36,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Blog Yönetimi', href: '/dashboard/blog', icon: BookOpen },
         { name: 'Yorumlar', href: '/dashboard/reviews', icon: Star },
         { name: 'Müşteriler', href: '/dashboard/customers', icon: Users },
+        { name: 'İletişim Mesajları', href: '/dashboard/contact-messages', icon: Mail },
         { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
     ];
 

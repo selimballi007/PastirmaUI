@@ -1,7 +1,7 @@
 // components/dashboard/hero-slides/SlideModal.tsx
 import { X, Upload, Save } from 'lucide-react';
 import { CldUploadWidget } from 'next-cloudinary';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeroSlide } from '@/app/lib/services/heroSlideService';
 
 interface SlideModalProps {
@@ -12,6 +12,7 @@ interface SlideModalProps {
 }
 
 const bgColorOptions = [
+    { value: '', label: 'Renksiz', preview: 'bg-transparent border-2 border-gray-300' },
     { value: 'from-amber-600 to-orange-700', label: 'Turuncu', preview: 'bg-gradient-to-r from-amber-600 to-orange-700' },
     { value: 'from-emerald-600 to-teal-700', label: 'Yeşil', preview: 'bg-gradient-to-r from-emerald-600 to-teal-700' },
     { value: 'from-blue-600 to-indigo-700', label: 'Mavi', preview: 'bg-gradient-to-r from-blue-600 to-indigo-700' },
@@ -22,15 +23,31 @@ const bgColorOptions = [
 
 export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: SlideModalProps) {
     const [formData, setFormData] = useState({
-        title: editingSlide?.title || '',
-        subtitle: editingSlide?.subtitle || '',
-        description: editingSlide?.description || '',
-        discount: editingSlide?.discount || '',
-        imageUrl: editingSlide?.imageUrl || '',
-        buttonText: editingSlide?.buttonText || 'Hemen Keşfet',
-        buttonLink: editingSlide?.buttonLink || '/products',
-        bgColor: editingSlide?.bgColor || 'from-amber-600 to-orange-700',
+        title: '',
+        subtitle: '',
+        description: '',
+        discount: '',
+        imageUrl: '',
+        buttonText: 'Hemen Keşfet',
+        buttonLink: '/products',
+        bgColor: 'from-amber-600 to-orange-700',
     });
+
+    // Reset form when modal opens or editingSlide changes
+    useEffect(() => {
+        if (isOpen) {
+            setFormData({
+                title: editingSlide?.title || '',
+                subtitle: editingSlide?.subtitle || '',
+                description: editingSlide?.description || '',
+                discount: editingSlide?.discount || '',
+                imageUrl: editingSlide?.imageUrl || '',
+                buttonText: editingSlide?.buttonText || 'Hemen Keşfet',
+                buttonLink: editingSlide?.buttonLink || '/products',
+                bgColor: editingSlide?.bgColor || 'from-amber-600 to-orange-700',
+            });
+        }
+    }, [isOpen, editingSlide]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -122,7 +139,7 @@ export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: Sl
                             name="discount"
                             value={formData.discount}
                             onChange={handleChange}
-                            placeholder="Örn: 30% İndirim"
+                            placeholder="Örn: %30 İndirim"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -188,7 +205,20 @@ export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: Sl
                         <CldUploadWidget
                             uploadPreset="heroslides"
                             onSuccess={(result: any) => {
-                                setFormData({ ...formData, imageUrl: result.info.secure_url });
+                                console.log('Upload successful:', result);
+                                const imageUrl = result.info.secure_url;
+                                console.log('Image URL:', imageUrl);
+                                setFormData(prev => ({ ...prev, imageUrl }));
+                                alert('Görsel başarıyla yüklendi!');
+                            }}
+                            onError={(error: any) => {
+                                console.error('Upload error:', error);
+                                alert('Görsel yüklenirken hata oluştu: ' + error.message);
+                            }}
+                            options={{
+                                folder: 'hero-slides',
+                                resourceType: 'image',
+                                maxFileSize: 5000000, // 5MB
                             }}
                         >
                             {({ open }) => (

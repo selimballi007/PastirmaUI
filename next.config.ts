@@ -13,8 +13,25 @@ const nextConfig: NextConfig = {
         hostname: 'placehold.co',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'external-content.duckduckgo.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.kayserihaber38.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'trthaberstatic.cdn.wp.trt.com.tr',
+        pathname: '/**',
+      },
     ],
   },
+  // Allow cross-origin requests from local network devices in development
+  allowedDevOrigins: ['http://192.168.1.103:3002'],
 };
 
 export default nextConfig;

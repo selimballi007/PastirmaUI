@@ -48,12 +48,20 @@ export const useAuthStore = create<AuthStore>()(
                 }, 2000);
             },
 
-            logout: () => {
+            logout: async () => {
                 console.log('🔴 [AuthStore.logout] Called');
                 set({
                     user: null,
                     error: null,
                 });
+
+                // ✅ Clear favorites when user logs out
+                try {
+                    const { useFavoriteStore } = await import('./favoriteStore');
+                    useFavoriteStore.getState().clearFavorites();
+                } catch (error) {
+                    console.error('Failed to clear favorites after logout:', error);
+                }
             },
 
             setLoading: (loading) => set({ isLoading: loading }),

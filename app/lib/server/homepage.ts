@@ -40,7 +40,7 @@ export interface HeroSlide {
 
 export async function getHeroSlides(): Promise<HeroSlide[]> {
     try {
-        const slides = await serverFetchAPI<any[]>('HeroSlide');
+        const slides = await serverFetchAPI<any[]>('hero-slide');
 
         // Transform API response to match HeroSlide interface
         return slides.map(slide => ({
@@ -81,7 +81,7 @@ const categoryColors = [
 
 export async function getCategories(): Promise<Category[]> {
     try {
-        const categories = await serverFetchAPI<any[]>('categories/with-product-count');
+        const categories = await serverFetchAPI<any[]>('category/with-product-count');
 
         // Transform API response to match Category interface
         return categories
@@ -171,7 +171,7 @@ function formatReviewDate(dateString: string): string {
 export async function getTestimonials(): Promise<Testimonial[]> {
     try {
         // API'den onaylanmış yorumları çek
-        const reviews = await serverFetchAPI<any[]>('reviews?pageSize=10');
+        const reviews = await serverFetchAPI<any[]>('review?pageSize=10');
 
         // Onaylanmış ve yorum içeren yorumları filtrele
         const approvedReviews = reviews
@@ -233,7 +233,8 @@ function formatBlogDate(dateString: string | null): string {
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
     try {
-        const posts = await serverFetchAPI<any[]>('BlogPost/featured');
+        // Get all active blog posts (not just featured)
+        const posts = await serverFetchAPI<any[]>('blog-post?includeInactive=false');
 
         // Transform API response to match BlogPost interface
         return posts.slice(0, 3).map(post => ({
@@ -263,7 +264,7 @@ export interface TestimonialStat {
 export async function getTestimonialStats(): Promise<TestimonialStat[]> {
     try {
         // API'den tüm onaylanmış yorumları çek
-        const reviews = await serverFetchAPI<any[]>('reviews?pageSize=1000');
+        const reviews = await serverFetchAPI<any[]>('review?pageSize=1000');
 
         // Onaylanmış yorumları filtrele
         const approvedReviews = reviews.filter(review => review.status === 'approved');

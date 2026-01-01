@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Percent, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import type { HeroSlide } from '@/app/lib/server/homepage';
 
 interface HeroSliderProps {
@@ -47,15 +47,18 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                             alt={slide.title}
                             className="w-full h-full object-cover"
                         />
-                        <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80`} />
+                        {slide.bgColor && (
+                            <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80`} />
+                        )}
                     </div>
 
                     <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
                         <div className="max-w-2xl text-white">
-                            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-4">
-                                <Percent className="w-4 h-4 mr-2" />
-                                <span className="text-sm font-semibold">{slide.discount}</span>
-                            </div>
+                            {slide.discount && (
+                                <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-4">
+                                    <span className="text-sm font-semibold">{slide.discount}</span>
+                                </div>
+                            )}
                             <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
                                 {slide.title}
                             </h1>

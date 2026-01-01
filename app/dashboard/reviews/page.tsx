@@ -277,7 +277,6 @@ export default function ReviewsPage() {
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-900">{review.username}</p>
-                                            <p className="text-sm text-gray-600">ID: {review.userId}</p>
                                         </div>
                                     </div>
                                 </div>

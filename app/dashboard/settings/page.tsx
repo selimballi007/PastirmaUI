@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useIsAuthenticated } from '@/app/lib/store/authStore';
 import { fetchAPI } from '@/app/lib/api/client';
 import {
     User,
@@ -26,9 +24,7 @@ interface UserProfile {
     createdAt: string;
 }
 
-export default function AccountPage() {
-    const router = useRouter();
-    const isAuthenticated = useIsAuthenticated();
+export default function SettingsPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -47,18 +43,9 @@ export default function AccountPage() {
         confirmPassword: '',
     });
 
-    // Redirect if not authenticated
     useEffect(() => {
-        if (!isAuthenticated) {
-            router.push('/account/login');
-        }
-    }, [isAuthenticated, router]);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchProfile();
-        }
-    }, [isAuthenticated]);
+        fetchProfile();
+    }, []);
 
     const fetchProfile = async () => {
         try {
@@ -164,22 +151,19 @@ export default function AccountPage() {
         });
     };
 
-    // Show loading while checking auth
-    if (!isAuthenticated || loading) {
+    if (loading) {
         return (
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-                </div>
-            </main>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            </div>
         );
     }
 
     return (
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="p-8 max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Hesabım</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Ayarlar</h1>
                 <p className="text-gray-600">Hesap bilgilerinizi ve güvenlik ayarlarınızı yönetin</p>
             </div>
 
@@ -365,6 +349,6 @@ export default function AccountPage() {
                     </form>
                 </div>
             </div>
-        </main>
+        </div>
     );
 }

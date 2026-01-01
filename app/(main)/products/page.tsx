@@ -11,15 +11,15 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-    searchParams: {
+    searchParams: Promise<{
         category?: string;
         filter?: string;
-    };
+    }>;
 }
 
-async function getProductsData(searchParams: Props['searchParams']): Promise<{
+async function getProductsData(searchParams: Awaited<Props['searchParams']>): Promise<{
     products: Product[];
-    categories: any[];
+    categories: { id: number; name: string; slug: string; count: number }[];
 }> {
     const { category, filter } = searchParams;
 
@@ -50,7 +50,8 @@ async function getProductsData(searchParams: Props['searchParams']): Promise<{
 }
 
 export default async function ProductsPage({ searchParams }: Props) {
-    const { products, categories } = await getProductsData(searchParams);
+    const resolvedSearchParams = await searchParams;
+    const { products, categories } = await getProductsData(resolvedSearchParams);
 
     return (
         <Suspense
@@ -63,8 +64,8 @@ export default async function ProductsPage({ searchParams }: Props) {
             <ProductsPageContent
                 initialProducts={products}
                 categories={categories}
-                initialCategoryId={searchParams.category ? parseInt(searchParams.category) : null}
-                initialFilter={searchParams.filter || 'all'}
+                initialCategoryId={resolvedSearchParams.category ? parseInt(resolvedSearchParams.category) : null}
+                initialFilter={resolvedSearchParams.filter || 'all'}
             />
         </Suspense>
     );

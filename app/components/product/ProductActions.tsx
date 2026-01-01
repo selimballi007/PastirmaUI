@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, X } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, X, Check } from 'lucide-react';
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore';
+import { useCartStore } from '@/app/lib/store/cartStore';
 
 interface ProductActionsProps {
     productId: number;
     productName: string;
     productDescription: string;
+    productImage: string;
+    price: number;
     stock: number;
+    discount?: number;
     initialQuantity?: number;
 }
 
@@ -17,16 +21,21 @@ export default function ProductActions({
     productId,
     productName,
     productDescription,
+    productImage,
+    price,
     stock,
+    discount,
     initialQuantity = 1,
 }: ProductActionsProps) {
     const [quantity, setQuantity] = useState(initialQuantity);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const user = useAuthStore((state) => state.user);
     const isFavorite = useFavoriteStore((state) => state.isFavorite(productId));
     const addToFavorites = useFavoriteStore((state) => state.addToFavorites);
     const removeFromFavorites = useFavoriteStore((state) => state.removeFromFavorites);
+    const addToCart = useCartStore((state) => state.addItem);
 
     const handleToggleFavorite = async () => {
         if (!user) {
@@ -46,9 +55,23 @@ export default function ProductActions({
     };
 
     const handleAddToCart = () => {
-        // TODO: Cart store'a ekle
-        console.log('Add to cart:', productId, 'quantity:', quantity);
-        alert(`${quantity} adet sepete eklendi!`);
+        try {
+            addToCart({
+                productId,
+                productName,
+                productImage,
+                price,
+                stock,
+                discount,
+                quantity,
+            });
+
+            // Show success message
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error: any) {
+            alert(error.message || 'Sepete eklenirken bir hata oluştu.');
+        }
     };
 
     const handleQuantityChange = (newQuantity: number) => {
@@ -96,12 +119,20 @@ export default function ProductActions({
                 </div>
             </div>
 
+            {/* Success Message */}
+            {showSuccess && (
+                <div className="flex items-center gap-2 p-4 bg-green-100 border border-green-200 rounded-lg text-green-800 font-medium animate-fade-in">
+                    <Check className="w-5 h-5" />
+                    <span>Ürün sepete eklendi!</span>
+                </div>
+            )}
+
             {/* Action Buttons */}
             <div className="space-y-3">
                 <button
                     onClick={handleAddToCart}
                     disabled={stock === 0}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl font-bold text-lg hover:from-gray-900 hover:to-black transition-all flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-xl font-bold text-lg hover:from-orange-700 hover:to-orange-800 transition-all flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <ShoppingCart className="w-6 h-6" />
                     <span>{stock === 0 ? 'Stokta Yok' : 'Sepete Ekle'}</span>
