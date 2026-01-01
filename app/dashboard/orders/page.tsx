@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { orderService } from '@/app/lib/services/orderService';
 import type { Order, PaginatedOrders } from '@/app/types/order';
 import { OrderStatus, OrderStatusLabels, PaymentMethodLabels } from '@/app/types/order';
-import { useOrderHub } from '@/app/lib/hooks/useOrderHub';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
@@ -19,23 +18,9 @@ export default function AdminOrdersPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // SignalR integration
-  const { isConnected, notifications, clearNotifications, requestNotificationPermission } = useOrderHub();
-  const [showNotifications, setShowNotifications] = useState(false);
-
   useEffect(() => {
     fetchOrders();
   }, [currentPage, statusFilter]);
-
-  // Auto-refresh when new order notification received
-  useEffect(() => {
-    if (notifications.length > 0) {
-      // Refresh orders list when new notification arrives
-      fetchOrders();
-      // Play notification sound (optional)
-      playNotificationSound();
-    }
-  }, [notifications.length]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -70,28 +55,6 @@ export default function AdminOrdersPage() {
       alert(err.message || 'Sipariş durumu güncellenirken bir hata oluştu.');
     } finally {
       setUpdatingStatus(false);
-    }
-  };
-
-  const playNotificationSound = () => {
-    // Optional: Play a notification sound
-    try {
-      const audio = new Audio('/notification.mp3');
-      audio.volume = 0.3;
-      audio.play().catch(() => {
-        // Ignore errors if sound file doesn't exist or autoplay is blocked
-      });
-    } catch {
-      // Ignore errors
-    }
-  };
-
-  const handleEnableNotifications = async () => {
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      alert('Bildirimler etkinleştirildi!');
-    } else {
-      alert('Bildirim izni reddedildi.');
     }
   };
 
@@ -139,75 +102,6 @@ export default function AdminOrdersPage() {
           {error}
         </div>
       )}
-
-      {/* SignalR Status & Notifications */}
-      <div className="mb-6 flex gap-4 items-start">
-        {/* Connection Status */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded ${isConnected ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-          <span className="text-sm font-semibold">
-            {isConnected ? 'Canlı Bağlantı Aktif' : 'Bağlantı Kesildi'}
-          </span>
-        </div>
-
-        {/* Notifications Bell */}
-        <div className="relative">
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Bildirimler
-            {notifications.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {notifications.length}
-              </span>
-            )}
-          </button>
-
-          {/* Notifications Dropdown */}
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-10 max-h-96 overflow-y-auto">
-              <div className="p-3 border-b flex justify-between items-center">
-                <h3 className="font-semibold">Yeni Siparişler</h3>
-                <button
-                  onClick={clearNotifications}
-                  className="text-sm text-blue-500 hover:text-blue-700"
-                >
-                  Temizle
-                </button>
-              </div>
-              {notifications.length > 0 ? (
-                <div className="divide-y">
-                  {notifications.map((notification, index) => (
-                    <div key={index} className="p-3 hover:bg-gray-50">
-                      <div className="font-semibold text-sm">#{notification.orderNumber}</div>
-                      <div className="text-sm text-gray-600">{notification.customerName}</div>
-                      <div className="text-sm font-semibold text-green-600">
-                        {notification.totalAmount.toFixed(2)} TL
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(notification.timestamp).toLocaleTimeString('tr-TR')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  Yeni bildirim yok
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Enable Browser Notifications */}
-        <button
-          onClick={handleEnableNotifications}
-          className="px-4 py-2 border rounded hover:bg-gray-50 text-sm"
-        >
-          Tarayıcı Bildirimlerini Etkinleştir
-        </button>
-      </div>
 
       {/* Filters */}
       <div className="mb-6 flex gap-4 items-center">
