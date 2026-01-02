@@ -42,3 +42,6 @@ next-env.d.ts
 
 certificates
 .claude/settings.local.json
+
+# CLAUDE.md
+CLAUDE.md
