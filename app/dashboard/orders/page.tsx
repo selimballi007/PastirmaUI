@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { orderService } from '@/app/lib/services/orderService';
 import type { Order, PaginatedOrders } from '@/app/types/order';
 import { OrderStatus, OrderStatusLabels, PaymentMethodLabels } from '@/app/types/order';
+import { useNotificationStore } from '@/app/lib/store/notificationStore';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
@@ -17,6 +18,13 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const clear = useNotificationStore(state => state.clear);
+
+  // Clear notification count when page loads
+  useEffect(() => {
+    clear();
+  }, [clear]);
 
   useEffect(() => {
     fetchOrders();
