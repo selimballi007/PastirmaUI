@@ -1,5 +1,12 @@
 // types/dashboard.ts
 
+// Re-export Order and OrderStatus from the canonical source
+import type { Order as OrderType } from './order';
+import { OrderStatus as OrderStatusEnum } from './order';
+
+export type Order = OrderType;
+export const OrderStatus = OrderStatusEnum;
+
 export interface DashboardStats {
     totalSales: number;
     totalOrders: number;
@@ -9,32 +16,6 @@ export interface DashboardStats {
     ordersChange: number;
     customersChange: number;
     productsChange: number;
-}
-
-export interface Order {
-    id: string;
-    orderNumber: string;
-    customerId: string;
-    userName: string;
-    userEmail: string;
-    productId: string;
-    productName: string;
-    quantity: number;
-    totalAmount: number;
-    orderStatus: OrderStatus;
-    createdDate: string;
-    updatedDate: string;
-}
-
-// Match backend C# enum values (serialized as numbers)
-export enum OrderStatus {
-    Pending = 0,
-    Confirmed = 1,
-    Preparing = 2,
-    Shipped = 3,
-    Delivered = 4,
-    Returned = 5,
-    Cancelled = 6,
 }
 
 export interface SalesDataPoint {
