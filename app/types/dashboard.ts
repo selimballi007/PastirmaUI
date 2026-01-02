@@ -1,11 +1,13 @@
 // types/dashboard.ts
 
-// Re-export Order and OrderStatus from the canonical source
+// Re-export types from their canonical sources
 import type { Order as OrderType } from './order';
 import { OrderStatus as OrderStatusEnum } from './order';
+import type { Category as CategoryType } from './category';
 
 export type Order = OrderType;
 export const OrderStatus = OrderStatusEnum;
+export type Category = CategoryType;
 
 export interface DashboardStats {
     totalSales: number;
@@ -38,12 +40,6 @@ export interface DashboardResponse {
     quickStats: QuickStats;
 }
 
-export interface Category {
-    id: number;
-    name: string;
-    icon: string;
-}
-
 export interface Review {
     id: number;
     productId: number;
@@ -55,6 +51,12 @@ export interface Review {
     status: string;
     createdAt: Date;
     approvedAt?: Date;
+}
+
+export interface ReviewStats {
+    pending: number;
+    approved: number;
+    rejected: number;
 }
 
 export interface ReviewFilters {

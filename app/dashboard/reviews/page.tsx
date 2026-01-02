@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/app/lib/api/client';
+import type { PagedResult } from '@/app/types/common';
+import type { ReviewStats } from '@/app/types/dashboard';
 import {
     Star,
     Check,
@@ -17,6 +19,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 
+// Page-specific Review interface (different from dashboard.ts Review)
 interface Review {
     id: number;
     productId: number;
@@ -28,20 +31,6 @@ interface Review {
     status: string;
     createdAt: string;
     approvedAt?: string;
-}
-
-interface PagedResult {
-    data: Review[];
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-}
-
-interface ReviewStats {
-    pending: number;
-    approved: number;
-    rejected: number;
 }
 
 type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected';
@@ -77,7 +66,7 @@ export default function ReviewsPage() {
                 url = `reviews/all?page=${page}&pageSize=10&status=${filterStatus}`;
             }
 
-            const result: PagedResult = await fetchAPI<PagedResult>(url);
+            const result = await fetchAPI<PagedResult<Review>>(url);
             setReviews(result.data);
             setTotalPages(result.totalPages);
             setTotalCount(result.totalCount);

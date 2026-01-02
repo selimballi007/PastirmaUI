@@ -1,13 +1,10 @@
 // lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { User } from '@/app/types/user';
 
-export interface User {
-    id: number;
-    username: string;
-    email: string;
-    role: string;
-}
+// Re-export User for convenience
+export type { User };
 
 interface AuthStore {
     user: User | null;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useIsAuthenticated } from '@/app/lib/store/authStore';
 import { fetchAPI } from '@/app/lib/api/client';
+import type { UserProfile } from '@/app/types/user';
 import {
     User,
     Mail,
@@ -14,17 +15,6 @@ import {
     CheckCircle,
     AlertCircle,
 } from 'lucide-react';
-
-interface UserProfile {
-    id: number;
-    email: string;
-    username: string | null;
-    fullName: string | null;
-    isVerified: boolean;
-    role: string;
-    lastLoginAt: string | null;
-    createdAt: string;
-}
 
 export default function AccountPage() {
     const router = useRouter();

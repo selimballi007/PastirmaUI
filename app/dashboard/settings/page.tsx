@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/app/lib/api/client';
+import type { UserProfile } from '@/app/types/user';
 import {
     User,
     Mail,
@@ -12,17 +13,6 @@ import {
     CheckCircle,
     AlertCircle,
 } from 'lucide-react';
-
-interface UserProfile {
-    id: number;
-    email: string;
-    username: string | null;
-    fullName: string | null;
-    isVerified: boolean;
-    role: string;
-    lastLoginAt: string | null;
-    createdAt: string;
-}
 
 export default function SettingsPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/app/lib/api/client';
+import type { Customer } from '@/app/types/user';
+import type { PagedResult } from '@/app/types/common';
 import {
     User,
     Mail,
@@ -15,28 +17,6 @@ import {
     Search,
     UserCheck,
 } from 'lucide-react';
-
-interface Customer {
-    id: number;
-    email: string;
-    username: string | null;
-    fullName: string | null;
-    isVerified: boolean;
-    isGuest: boolean;
-    role: string;
-    lastLoginAt: string | null;
-    createdAt: string;
-    totalOrders: number;
-    totalReviews: number;
-}
-
-interface PagedResult {
-    data: Customer[];      // camelCase - .NET serializes to JSON as camelCase
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-}
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -53,7 +33,7 @@ export default function CustomersPage() {
     const fetchCustomers = async () => {
         try {
             setLoading(true);
-            const result: PagedResult = await fetchAPI<PagedResult>(
+            const result = await fetchAPI<PagedResult<Customer>>(
                 `user/customers?page=${page}&pageSize=10`
             );
             console.log('API Response:', result); // Debug log

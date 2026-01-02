@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/app/lib/api/client';
+import type { ContactMessage } from '@/app/types/contact';
+import type { PagedResult } from '@/app/types/common';
 import {
     Mail,
     Calendar,
@@ -13,29 +15,6 @@ import {
     Eye,
     Trash2,
 } from 'lucide-react';
-
-interface ContactMessage {
-    id: number;
-    name: string;
-    email: string;
-    phone?: string;
-    subject: string;
-    message: string;
-    createdDate: string;
-    isRead: boolean;
-    readAt?: string;
-    isReplied: boolean;
-    repliedAt?: string;
-    notes?: string;
-}
-
-interface PagedResult {
-    data: ContactMessage[];
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-}
 
 export default function ContactMessagesPage() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -57,7 +36,7 @@ export default function ContactMessagesPage() {
     const fetchMessages = async () => {
         try {
             setLoading(true);
-            const result: PagedResult = await fetchAPI<PagedResult>(
+            const result = await fetchAPI<PagedResult<ContactMessage>>(
                 `contact/messages?page=${page}&pageSize=10`
             );
             setMessages(result.data || []);

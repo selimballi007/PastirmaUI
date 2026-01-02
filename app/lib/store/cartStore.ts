@@ -1,16 +1,10 @@
 // lib/store/cartStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { CartItem } from '@/app/types/cart';
 
-export interface CartItem {
-    productId: number;
-    productName: string;
-    productImage: string;
-    price: number;
-    quantity: number;
-    stock: number;
-    discount?: number;
-}
+// Re-export CartItem for convenience
+export type { CartItem };
 
 interface CartStore {
     items: CartItem[];

@@ -1,6 +1,10 @@
 // lib/server/homepage.ts - Server-side data fetching for homepage
 import type { Product } from '@/app/types/dashboard';
+import type { Testimonial, TestimonialStat } from '@/app/types/testimonial';
 import { serverFetchAPI } from './api';
+
+// Re-export testimonial types for convenience
+export type { Testimonial, TestimonialStat };
 
 // Hero slider data
 export interface HeroSlide {
@@ -105,18 +109,6 @@ export async function getBestSellers(): Promise<Product[]> {
 }
 
 // Testimonials
-export interface Testimonial {
-    id: number;
-    name: string;
-    location: string;
-    rating: number;
-    comment: string;
-    date: string;
-    verified: boolean;
-    avatar: string;
-    bgColor: string;
-}
-
 // Avatar ve background color rotasyonu
 const avatars = ['👨', '👩', '👨‍🦱', '👩‍🦰', '👨‍🦰', '👩‍🦱', '🧑', '👴', '👵'];
 const bgColors = [
@@ -231,12 +223,6 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 }
 
 // Testimonial stats
-export interface TestimonialStat {
-    value: string;
-    label: string;
-    color: string;
-}
-
 export async function getTestimonialStats(): Promise<TestimonialStat[]> {
     try {
         // API'den tüm onaylanmış yorumları çek

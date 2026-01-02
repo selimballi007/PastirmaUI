@@ -2,22 +2,10 @@
 'use client';
 
 import { fetchAPI } from '@/app/lib/api/client';
+import type { FavoriteProduct } from '@/app/types/favorite';
 
-export interface FavoriteProduct {
-    id: number;
-    name: string;
-    description?: string;
-    price: number;
-    oldPrice?: number;
-    imageUrl: string;
-    categoryId: number;
-    categoryName: string;
-    isCampaign: boolean;
-    isBestSeller: boolean;
-    isNew: boolean;
-    isActive: boolean;
-    createdAt: string;
-}
+// Re-export types for convenience
+export type { FavoriteProduct };
 
 export const favoriteService = {
     async addToFavorites(productId: number): Promise<void> {

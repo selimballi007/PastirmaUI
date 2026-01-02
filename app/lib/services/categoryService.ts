@@ -2,35 +2,16 @@
 'use client';
 
 import { fetchAPI } from '@/app/lib/api/client';
+import type {
+    Category,
+    CategoryWithProductCount,
+    CreateCategoryDto,
+    UpdateCategoryDto,
+    ReorderCategoryDto
+} from '@/app/types/category';
 
-export interface Category {
-    id: number;
-    name: string;
-    icon: string;
-    displayOrder: number;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt?: string;
-}
-
-export interface CategoryWithProductCount extends Category {
-    productCount: number;
-}
-
-export interface CreateCategoryDto {
-    name: string;
-    icon?: string;
-}
-
-export interface UpdateCategoryDto {
-    name: string;
-    icon?: string;
-}
-
-export interface ReorderCategoryDto {
-    id: number;
-    displayOrder: number;
-}
+// Re-export types for convenience
+export type { Category, CategoryWithProductCount, CreateCategoryDto, UpdateCategoryDto, ReorderCategoryDto };
 
 export const categoryService = {
     async createCategory(data: CreateCategoryDto): Promise<Category> {
