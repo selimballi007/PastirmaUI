@@ -1,30 +1,6 @@
 // lib/server/homepage.ts - Server-side data fetching for homepage
 import type { Product } from '@/app/types/dashboard';
-import { buildApiUrl, parseFetchResponse } from '@/app/lib/utils/fetch';
-
-/**
- * Server-side API call helper for public endpoints (no auth required)
- * Uses shared utilities for consistency
- */
-async function serverFetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = buildApiUrl(endpoint);
-
-    console.log('[Server] Fetching public data:', url);
-
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-    };
-
-    const response = await fetch(url, {
-        ...options,
-        headers,
-        // Revalidate data every 60 seconds for fresh content
-        next: { revalidate: 60 },
-    });
-
-    return parseFetchResponse<T>(response);
-}
+import { serverFetchAPI } from './api';
 
 // Hero slider data
 export interface HeroSlide {
