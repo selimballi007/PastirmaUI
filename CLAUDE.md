@@ -15,6 +15,17 @@ The frontend and backend are in separate repositories:
 - Frontend: `c:\Projects\Pastirma\pastirma-ui\`
 - Backend: `C:\Projects\Pastirma\PastirmaApi\`
 
+## Working with Claude Code
+
+**Session Continuity**: Claude Code can remember context from previous sessions through automatic conversation summaries. When a conversation reaches the context limit, it will be summarized and can be continued in a new session, preserving:
+
+- Previous implementation decisions and patterns
+- Known issues and their solutions
+- Type consolidation and architectural changes
+- Ongoing refactoring work
+
+This enables multi-session workflows without losing project context or having to re-explain previous work.
+
 ## Development Commands
 
 ### Frontend (Next.js)
@@ -127,6 +138,65 @@ app/
 └── types/                    # TypeScript type definitions
 
 middleware.ts                 # Route protection & auth checks
+```
+
+### Type Organization
+
+**All TypeScript types are centralized in `app/types/`** for consistency and reusability.
+
+```
+app/types/
+├── common.ts       # Shared utilities (PagedResult<T>)
+├── user.ts         # User, UserProfile, Customer
+├── cart.ts         # CartItem
+├── contact.ts      # ContactMessage
+├── category.ts     # Category, CategoryWithProductCount, DTOs
+├── favorite.ts     # FavoriteProduct
+├── heroSlide.ts    # HeroSlide, DTOs
+├── testimonial.ts  # Testimonial, TestimonialStat
+├── order.ts        # Order, OrderStatus, OrderItem, PaymentMethod
+└── dashboard.ts    # Dashboard-specific types, Review, Product
+```
+
+**Key Principles**:
+
+1. **Domain Models in Types** ✅
+   - Reusable data structures (User, Product, Order, etc.)
+   - Shared across multiple files
+   - Pure data - no functions or Zustand-specific logic
+
+2. **Implementation Details Stay Local** ❌
+   - Zustand store state interfaces (`AuthStore`, `CartStore`)
+   - Page-specific UI types (`FormData`, `StatCard`)
+   - Component-specific props interfaces
+
+3. **Generic Types for Reusability**
+   ```typescript
+   // Use generic PagedResult<T> from common.ts
+   import type { PagedResult } from '@/app/types/common';
+   const result = await fetchAPI<PagedResult<Customer>>('users');
+   ```
+
+4. **Re-exports for Convenience**
+   - Services re-export types they import
+   - Stores re-export domain models
+   - Maintains backward compatibility
+
+**Examples**:
+
+```typescript
+// ✅ GOOD: Domain model in types/
+export interface User {
+    id: number;
+    email: string;
+    role: string;
+}
+
+// ❌ BAD: Store state stays in store file
+interface AuthStore {
+    user: User | null;
+    login: (user: User) => void;  // Functions = implementation detail
+}
 ```
 
 ## Key Conventions
