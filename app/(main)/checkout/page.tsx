@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/app/lib/store/cartStore';
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { orderService } from '@/app/lib/services/orderService';
+import { addressService } from '@/app/lib/services/addressService';
+import AddressForm from '@/app/components/common/AddressForm';
+import AddressSelector from '@/app/components/common/AddressSelector';
 import type { Address, PaymentMethod, CreateOrder } from '@/app/types/order';
 
 const SHIPPING_COST = 50;
@@ -19,6 +22,13 @@ export default function CheckoutPage() {
   const [isGuest, setIsGuest] = useState(!user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Saved addresses for logged-in users
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedShippingId, setSelectedShippingId] = useState<number | undefined>();
+  const [selectedBillingId, setSelectedBillingId] = useState<number | undefined>();
+  const [showAddNewShipping, setShowAddNewShipping] = useState(false);
+  const [showAddNewBilling, setShowAddNewBilling] = useState(false);
 
   // Guest info
   const [guestInfo, setGuestInfo] = useState({
@@ -64,6 +74,36 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [items.length, router]);
+
+  // Load saved addresses for logged-in users
+  useEffect(() => {
+    const loadAddresses = async () => {
+      if (user) {
+        try {
+          const addresses = await addressService.getAddresses();
+          setSavedAddresses(addresses);
+
+          // Auto-select default address
+          const defaultAddr = addresses.find(a => a.isDefault);
+          if (defaultAddr && defaultAddr.id) {
+            setSelectedShippingId(defaultAddr.id);
+            setShippingAddress(defaultAddr);
+          } else if (addresses.length > 0) {
+            // If no default, show selector without auto-selecting
+            setShowAddNewShipping(false);
+          } else {
+            // No saved addresses, show form
+            setShowAddNewShipping(true);
+          }
+        } catch (error) {
+          console.error('Failed to load addresses:', error);
+          setShowAddNewShipping(true);
+        }
+      }
+    };
+
+    loadAddresses();
+  }, [user]);
 
   // Calculate totals
   const subTotal = getTotalPrice();
@@ -233,71 +273,51 @@ export default function CheckoutPage() {
               {step === 2 && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6">Teslimat Adresi</h2>
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Ad Soyad *"
-                      value={shippingAddress.fullName}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                      required
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Telefon *"
-                      value={shippingAddress.phone}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Adres Satırı 1 *"
-                      value={shippingAddress.addressLine1}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine1: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Adres Satırı 2"
-                      value={shippingAddress.addressLine2}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine2: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="Şehir *"
-                        value={shippingAddress.city}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                        required
+
+                  {user && savedAddresses.length > 0 && !showAddNewShipping ? (
+                    <>
+                      <AddressSelector
+                        addresses={savedAddresses}
+                        selectedId={selectedShippingId}
+                        onSelect={(address) => {
+                          setSelectedShippingId(address.id);
+                          setShippingAddress(address);
+                        }}
+                        onAddNew={() => setShowAddNewShipping(true)}
                       />
-                      <input
-                        type="text"
-                        placeholder="İlçe *"
-                        value={shippingAddress.district}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                        required
+                    </>
+                  ) : (
+                    <>
+                      <AddressForm
+                        address={shippingAddress}
+                        onChange={setShippingAddress}
+                        showDefaultOption={false}
                       />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Posta Kodu"
-                      value={shippingAddress.postalCode}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                    />
-                    <textarea
-                      placeholder="Adres Notu"
-                      value={shippingAddress.notes}
-                      onChange={(e) => setShippingAddress({ ...shippingAddress, notes: e.target.value })}
-                      className="w-full px-4 py-2 border rounded"
-                      rows={3}
-                    />
-                  </div>
+
+                      {user && savedAddresses.length > 0 && (
+                        <button
+                          onClick={() => setShowAddNewShipping(false)}
+                          className="mt-4 text-blue-600 hover:underline"
+                        >
+                          ← Kayıtlı adreslerden seç
+                        </button>
+                      )}
+
+                      {!user && (
+                        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                          <p className="text-sm text-blue-800">
+                            💡 <strong>Hesap oluşturarak</strong> adreslerinizi kaydedebilir ve bir sonraki alışverişinizde hızlıca kullanabilirsiniz.
+                          </p>
+                          <button
+                            onClick={() => router.push('/register?redirect=/checkout')}
+                            className="mt-2 text-blue-600 hover:underline font-semibold"
+                          >
+                            Hesap Oluştur
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
@@ -319,64 +339,36 @@ export default function CheckoutPage() {
                   </div>
 
                   {!useSameAddress && (
-                    <div className="space-y-4">
-                      <input
-                        type="text"
-                        placeholder="Ad Soyad *"
-                        value={billingAddress.fullName}
-                        onChange={(e) => setBillingAddress({ ...billingAddress, fullName: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                        required
-                      />
-                      <input
-                        type="tel"
-                        placeholder="Telefon *"
-                        value={billingAddress.phone}
-                        onChange={(e) => setBillingAddress({ ...billingAddress, phone: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                        required
-                      />
-                      <input
-                        type="text"
-                        placeholder="Adres Satırı 1 *"
-                        value={billingAddress.addressLine1}
-                        onChange={(e) => setBillingAddress({ ...billingAddress, addressLine1: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                        required
-                      />
-                      <input
-                        type="text"
-                        placeholder="Adres Satırı 2"
-                        value={billingAddress.addressLine2}
-                        onChange={(e) => setBillingAddress({ ...billingAddress, addressLine2: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          placeholder="Şehir *"
-                          value={billingAddress.city}
-                          onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
-                          className="w-full px-4 py-2 border rounded"
-                          required
+                    <>
+                      {user && savedAddresses.length > 0 && !showAddNewBilling ? (
+                        <AddressSelector
+                          addresses={savedAddresses}
+                          selectedId={selectedBillingId}
+                          onSelect={(address) => {
+                            setSelectedBillingId(address.id);
+                            setBillingAddress(address);
+                          }}
+                          onAddNew={() => setShowAddNewBilling(true)}
                         />
-                        <input
-                          type="text"
-                          placeholder="İlçe *"
-                          value={billingAddress.district}
-                          onChange={(e) => setBillingAddress({ ...billingAddress, district: e.target.value })}
-                          className="w-full px-4 py-2 border rounded"
-                          required
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Posta Kodu"
-                        value={billingAddress.postalCode}
-                        onChange={(e) => setBillingAddress({ ...billingAddress, postalCode: e.target.value })}
-                        className="w-full px-4 py-2 border rounded"
-                      />
-                    </div>
+                      ) : (
+                        <>
+                          <AddressForm
+                            address={billingAddress}
+                            onChange={setBillingAddress}
+                            showDefaultOption={false}
+                          />
+
+                          {user && savedAddresses.length > 0 && (
+                            <button
+                              onClick={() => setShowAddNewBilling(false)}
+                              className="mt-4 text-blue-600 hover:underline"
+                            >
+                              ← Kayıtlı adreslerden seç
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
               )}

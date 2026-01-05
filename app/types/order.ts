@@ -28,17 +28,8 @@ export const PaymentMethodLabels: Record<PaymentMethod, string> = {
   [PaymentMethod.PayAtDoor]: 'Kapıda Ödeme',
 };
 
-export interface Address {
-  id?: number;
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  district: string;
-  postalCode?: string;
-  notes?: string;
-}
+// Re-export Address type from address.ts
+export type { Address } from './address';
 
 export interface OrderItem {
   id?: number;
