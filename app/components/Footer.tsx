@@ -10,7 +10,7 @@ export default function Footer() {
 
                 {/* Sol: Şirket bilgisi / slogan */}
                 <div>
-                    <h3 className="text-xl font-bold mb-2">Pastırma Adası</h3>
+                    <h3 className="text-xl font-bold mb-2">Pastırma</h3>
                     <p className="text-gray-400">
                         Delicious food delivered straight to your door.
                     </p>
@@ -46,7 +46,7 @@ export default function Footer() {
 
             {/* Alt not */}
             <div className="mt-8 text-center text-gray-500 text-sm">
-                &copy; {new Date().getFullYear()} Pastırma Adası. All rights reserved.
+                &copy; {new Date().getFullYear()} Pastırma. All rights reserved.
             </div>
         </footer>
     )

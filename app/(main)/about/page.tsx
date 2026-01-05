@@ -3,8 +3,8 @@ import { ArrowLeft, Award, Clock, Heart, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Hakkımızda - Pastırma Adası',
-    description: 'Pastırma Adası olarak, geleneksel lezzetleri modern kalite standartlarıyla buluşturuyoruz.',
+    title: 'Hakkımızda - Pastırma',
+    description: 'Pastırma olarak, geleneksel lezzetleri modern kalite standartlarıyla buluşturuyoruz.',
 };
 
 export default function AboutPage() {
@@ -22,7 +22,7 @@ export default function AboutPage() {
                     </Link>
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">Hakkımızda</h1>
                     <p className="text-xl text-orange-100 max-w-3xl">
-                        Geleneksel lezzetleri modern kalite standartlarıyla buluşturan Pastırma Adası&apos;na hoş geldiniz
+                        Geleneksel lezzetleri modern kalite standartlarıyla buluşturan Pastırma &apos;na hoş geldiniz
                     </p>
                 </div>
             </div>
@@ -34,7 +34,7 @@ export default function AboutPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Hikayemiz</h2>
                     <div className="prose prose-lg max-w-none text-gray-600">
                         <p className="mb-4">
-                            Pastırma Adası, Türk mutfağının en değerli lezzetlerinden biri olan pastırmayı
+                            Pastırma , Türk mutfağının en değerli lezzetlerinden biri olan pastırmayı
                             ve geleneksel şarküteri ürünlerini sevgiyle hazırlayan bir markadır. Yılların
                             deneyimi ve bilgi birikimiyle, en kaliteli hammaddeleri kullanarak ürettiğimiz
                             ürünlerimiz, sofranıza özel lezzetler getiriyor.

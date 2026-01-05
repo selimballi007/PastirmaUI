@@ -14,7 +14,7 @@ import {
     AlertCircle,
 } from 'lucide-react';
 
-export default function SettingsPage() {
+export default function AccountPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -153,18 +153,17 @@ export default function SettingsPage() {
         <div className="p-8 max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Ayarlar</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Hesabım</h1>
                 <p className="text-gray-600">Hesap bilgilerinizi ve güvenlik ayarlarınızı yönetin</p>
             </div>
 
             {/* Message Banner */}
             {message && (
                 <div
-                    className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-                        message.type === 'success'
-                            ? 'bg-green-50 text-green-800 border border-green-200'
-                            : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}
+                    className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === 'success'
+                        ? 'bg-green-50 text-green-800 border border-green-200'
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                        }`}
                 >
                     {message.type === 'success' ? (
                         <CheckCircle className="w-5 h-5" />

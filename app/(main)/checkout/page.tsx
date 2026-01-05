@@ -37,6 +37,13 @@ export default function CheckoutPage() {
     phone: '',
   });
 
+  // Guest info validation errors
+  const [guestInfoErrors, setGuestInfoErrors] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+
   // Shipping address
   const [shippingAddress, setShippingAddress] = useState<Address>({
     fullName: '',
@@ -110,20 +117,61 @@ export default function CheckoutPage() {
   const shippingCost = subTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const totalAmount = subTotal + shippingCost;
 
+  // Validate guest info
+  const validateGuestInfo = () => {
+    const errors = {
+      name: '',
+      email: '',
+      phone: '',
+    };
+
+    let isValid = true;
+
+    // Validate name
+    if (!guestInfo.name.trim()) {
+      errors.name = 'Ad Soyad zorunludur.';
+      isValid = false;
+    } else if (guestInfo.name.trim().length < 3) {
+      errors.name = 'Ad Soyad en az 3 karakter olmalıdır.';
+      isValid = false;
+    }
+
+    // Validate email
+    if (!guestInfo.email.trim()) {
+      errors.email = 'Email zorunludur.';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestInfo.email)) {
+      errors.email = 'Geçerli bir email adresi giriniz.';
+      isValid = false;
+    }
+
+    // Validate phone
+    if (!guestInfo.phone.trim()) {
+      errors.phone = 'Telefon numarası zorunludur.';
+      isValid = false;
+    } else if (!/^[0-9]{10,11}$/.test(guestInfo.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Geçerli bir telefon numarası giriniz (10-11 rakam).';
+      isValid = false;
+    }
+
+    setGuestInfoErrors(errors);
+    return isValid;
+  };
+
   const handleNextStep = () => {
     setError('');
 
     // Validate current step
     if (step === 1 && isGuest) {
-      if (!guestInfo.name || !guestInfo.email || !guestInfo.phone) {
-        setError('Lütfen tüm misafir bilgilerini doldurun.');
+      if (!validateGuestInfo()) {
+        setError('Lütfen tüm alanları doğru bir şekilde doldurun.');
         return;
       }
     }
 
     if (step === 2) {
       if (!shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.addressLine1 ||
-          !shippingAddress.city || !shippingAddress.district) {
+        !shippingAddress.city || !shippingAddress.district) {
         setError('Lütfen zorunlu teslimat adres bilgilerini doldurun.');
         return;
       }
@@ -131,7 +179,7 @@ export default function CheckoutPage() {
 
     if (step === 3 && !useSameAddress) {
       if (!billingAddress.fullName || !billingAddress.phone || !billingAddress.addressLine1 ||
-          !billingAddress.city || !billingAddress.district) {
+        !billingAddress.city || !billingAddress.district) {
         setError('Lütfen zorunlu fatura adres bilgilerini doldurun.');
         return;
       }
@@ -190,11 +238,10 @@ export default function CheckoutPage() {
           <div className="flex items-center justify-between">
             {['Giriş', 'Teslimat', 'Fatura', 'Ödeme', 'Özet'].map((label, index) => (
               <div key={index} className="flex flex-col items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step > index + 1 ? 'bg-green-500 text-white' :
-                  step === index + 1 ? 'bg-blue-500 text-white' :
-                  'bg-gray-300 text-gray-600'
-                }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step > index + 1 ? 'bg-green-500 text-white' :
+                    step === index + 1 ? 'bg-blue-500 text-white' :
+                      'bg-gray-300 text-gray-600'
+                  }`}>
                   {step > index + 1 ? '✓' : index + 1}
                 </div>
                 <span className="text-sm mt-2">{label}</span>
@@ -225,7 +272,7 @@ export default function CheckoutPage() {
                     <>
                       <div className="mb-6">
                         <button
-                          onClick={() => router.push('/login?redirect=/checkout')}
+                          onClick={() => router.push('/account/login?redirect=/checkout')}
                           className="w-full py-3 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                           Giriş Yap
@@ -236,27 +283,63 @@ export default function CheckoutPage() {
 
                       <div className="space-y-4">
                         <h3 className="font-semibold">Misafir Olarak Devam Et</h3>
-                        <input
-                          type="text"
-                          placeholder="Ad Soyad"
-                          value={guestInfo.name}
-                          onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
-                          className="w-full px-4 py-2 border rounded"
-                        />
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={guestInfo.email}
-                          onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
-                          className="w-full px-4 py-2 border rounded"
-                        />
-                        <input
-                          type="tel"
-                          placeholder="Telefon"
-                          value={guestInfo.phone}
-                          onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                          className="w-full px-4 py-2 border rounded"
-                        />
+
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Ad Soyad *"
+                            value={guestInfo.name}
+                            onChange={(e) => {
+                              setGuestInfo({ ...guestInfo, name: e.target.value });
+                              // Clear error when user types
+                              if (guestInfoErrors.name) {
+                                setGuestInfoErrors({ ...guestInfoErrors, name: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded ${guestInfoErrors.name ? 'border-red-500' : 'border-gray-300'}`}
+                          />
+                          {guestInfoErrors.name && (
+                            <p className="text-red-500 text-sm mt-1">{guestInfoErrors.name}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <input
+                            type="email"
+                            placeholder="Email *"
+                            value={guestInfo.email}
+                            onChange={(e) => {
+                              setGuestInfo({ ...guestInfo, email: e.target.value });
+                              // Clear error when user types
+                              if (guestInfoErrors.email) {
+                                setGuestInfoErrors({ ...guestInfoErrors, email: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded ${guestInfoErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                          />
+                          {guestInfoErrors.email && (
+                            <p className="text-red-500 text-sm mt-1">{guestInfoErrors.email}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <input
+                            type="tel"
+                            placeholder="Telefon *"
+                            value={guestInfo.phone}
+                            onChange={(e) => {
+                              setGuestInfo({ ...guestInfo, phone: e.target.value });
+                              // Clear error when user types
+                              if (guestInfoErrors.phone) {
+                                setGuestInfoErrors({ ...guestInfoErrors, phone: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded ${guestInfoErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
+                          />
+                          {guestInfoErrors.phone && (
+                            <p className="text-red-500 text-sm mt-1">{guestInfoErrors.phone}</p>
+                          )}
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -306,10 +389,10 @@ export default function CheckoutPage() {
                       {!user && (
                         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
                           <p className="text-sm text-blue-800">
-                            💡 <strong>Hesap oluşturarak</strong> adreslerinizi kaydedebilir ve bir sonraki alışverişinizde hızlıca kullanabilirsiniz.
+                            💡 <strong>Hesap oluşturarak</strong> adreslerinizi kaydedebilir, siparişlerinizi kolayca takip edebilir ve bir sonraki alışverişinizde hızlıca kullanabilirsiniz.
                           </p>
                           <button
-                            onClick={() => router.push('/register?redirect=/checkout')}
+                            onClick={() => router.push('/account/register?redirect=/checkout')}
                             className="mt-2 text-blue-600 hover:underline font-semibold"
                           >
                             Hesap Oluştur

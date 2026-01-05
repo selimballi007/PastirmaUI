@@ -55,14 +55,12 @@ export default function DashboardNavbar({ setSidebarOpen }: DashboardNavbarProps
                     {/* Right side buttons */}
                     <div className="flex items-center space-x-4">
                         {/* Connection Status */}
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                            isConnected
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-gray-100 text-gray-600'
-                        }`}>
-                            <div className={`w-2 h-2 rounded-full ${
-                                isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
-                            }`}></div>
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${isConnected
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
+                            }`}>
+                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                                }`}></div>
                             <span>{isConnected ? 'Canlı' : 'Bağlantı Yok'}</span>
                         </div>
 
@@ -95,18 +93,11 @@ export default function DashboardNavbar({ setSidebarOpen }: DashboardNavbarProps
                             {userMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                                     <Link
-                                        href="/dashboard/profile"
+                                        href="/dashboard/account"
                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         onClick={() => setUserMenuOpen(false)}
                                     >
-                                        Profilim
-                                    </Link>
-                                    <Link
-                                        href="/dashboard/settings"
-                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        onClick={() => setUserMenuOpen(false)}
-                                    >
-                                        Ayarlar
+                                        Hesabım
                                     </Link>
                                     <hr className="my-1 border-gray-200" />
                                     <button

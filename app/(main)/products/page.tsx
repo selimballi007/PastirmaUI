@@ -6,7 +6,7 @@ import type { Product } from '@/app/types/dashboard';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Ürünler - Pastırma Adası',
+    title: 'Ürünler - Pastırma',
     description: 'En taze ve kaliteli pastırma ürünlerimizi keşfedin',
 };
 

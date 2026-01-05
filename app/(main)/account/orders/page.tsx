@@ -24,7 +24,7 @@ export default function UserOrdersPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/login?redirect=/account/orders');
+      router.push('/account/login?redirect=/account/orders');
       return;
     }
 
@@ -160,8 +160,8 @@ export default function UserOrdersPage() {
                       })}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(order.status)}`}>
-                    {OrderStatusLabels[order.status]}
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(order.orderStatus)}`}>
+                    {OrderStatusLabels[order.orderStatus]}
                   </span>
                 </div>
 
@@ -191,7 +191,7 @@ export default function UserOrdersPage() {
                     Detayları Gör
                   </button>
 
-                  {order.status === OrderStatus.Pending && (
+                  {order.orderStatus === OrderStatus.Pending && (
                     <button
                       onClick={() => handleCancelOrder(order.id)}
                       className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
@@ -326,8 +326,8 @@ export default function UserOrdersPage() {
                   </p>
                   <p>
                     <strong>Sipariş Durumu:</strong>{' '}
-                    <span className={`px-2 py-1 rounded ${getStatusBadgeColor(selectedOrder.status)}`}>
-                      {OrderStatusLabels[selectedOrder.status]}
+                    <span className={`px-2 py-1 rounded ${getStatusBadgeColor(selectedOrder.orderStatus)}`}>
+                      {OrderStatusLabels[selectedOrder.orderStatus]}
                     </span>
                   </p>
                 </div>
@@ -342,7 +342,7 @@ export default function UserOrdersPage() {
               )}
 
               <div className="flex justify-end gap-2">
-                {selectedOrder.status === OrderStatus.Pending && (
+                {selectedOrder.orderStatus === OrderStatus.Pending && (
                   <button
                     onClick={() => {
                       handleCancelOrder(selectedOrder.id);

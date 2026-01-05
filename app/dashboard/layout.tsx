@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Yorumlar', href: '/dashboard/reviews', icon: Star },
         { name: 'Müşteriler', href: '/dashboard/customers', icon: Users },
         { name: 'İletişim Mesajları', href: '/dashboard/contact-messages', icon: Mail },
-        { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
+        { name: 'Ayarlar', href: '/dashboard', icon: Settings },
     ];
 
     return (

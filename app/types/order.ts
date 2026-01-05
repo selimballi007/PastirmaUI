@@ -1,3 +1,5 @@
+import type { Address } from './address';
+
 export enum OrderStatus {
   Pending = 0,
   Confirmed = 1,
@@ -28,8 +30,8 @@ export const PaymentMethodLabels: Record<PaymentMethod, string> = {
   [PaymentMethod.PayAtDoor]: 'Kapıda Ödeme',
 };
 
-// Re-export Address type from address.ts
-export type { Address } from './address';
+// Re-export Address type for convenience
+export type { Address };
 
 export interface OrderItem {
   id?: number;

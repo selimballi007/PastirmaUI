@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     return {
-        title: `${product.name} - Pastırma Adası`,
+        title: `${product.name} - Pastırma`,
         description: product.description,
         openGraph: {
             title: product.name,
@@ -49,13 +49,12 @@ const StarRating = ({ rating, size = 'w-5 h-5' }: { rating: number; size?: strin
         {[...Array(5)].map((_, i) => (
             <Star
                 key={i}
-                className={`${size} ${
-                    i < Math.floor(rating)
+                className={`${size} ${i < Math.floor(rating)
                         ? 'fill-amber-400 text-amber-400'
                         : i < rating
-                        ? 'fill-amber-200 text-amber-400'
-                        : 'fill-gray-300 text-gray-300'
-                }`}
+                            ? 'fill-amber-200 text-amber-400'
+                            : 'fill-gray-300 text-gray-300'
+                    }`}
             />
         ))}
     </div>
@@ -238,7 +237,7 @@ export default async function ProductDetailPage({ params }: Props) {
                         <ProductActions
                             productId={product.id}
                             productName={product.name}
-                            productDescription={product.description}
+                            productDescription={product.description || ''}
                             productImage={product.imageUrl}
                             price={product.price}
                             stock={product.stock}

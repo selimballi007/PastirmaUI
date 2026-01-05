@@ -33,7 +33,7 @@ export default function AddressesPage() {
   // Redirect if not logged in
   useEffect(() => {
     if (!user) {
-      router.push('/login?redirect=/account/addresses');
+      router.push('/account/login?redirect=/account/addresses');
     }
   }, [user, router]);
 
@@ -62,7 +62,7 @@ export default function AddressesPage() {
 
     // Validation
     if (!formData.fullName || !formData.phone || !formData.addressLine1 ||
-        !formData.city || !formData.district) {
+      !formData.city || !formData.district) {
       setError('Lütfen zorunlu alanları doldurun.');
       return;
     }
@@ -101,7 +101,7 @@ export default function AddressesPage() {
 
     // Validation
     if (!formData.fullName || !formData.phone || !formData.addressLine1 ||
-        !formData.city || !formData.district) {
+      !formData.city || !formData.district) {
       setError('Lütfen zorunlu alanları doldurun.');
       return;
     }

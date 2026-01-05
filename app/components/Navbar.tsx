@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { FaShoppingCart, FaUser, FaUserCircle } from 'react-icons/fa'
 import { GiHamburgerMenu } from 'react-icons/gi'
 import { IoMdClose } from 'react-icons/io'
-import { MdLogout, MdDashboard } from 'react-icons/md'
+import { MdLogout, MdDashboard, MdLocationOn } from 'react-icons/md'
 import { useAuthStore } from '@/app/lib/store/authStore'
 import { Heart } from 'lucide-react'
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore'
@@ -50,7 +50,7 @@ export default function Navbar() {
                     {/* Firma adı */}
                     <div className="flex-shrink-0">
                         <Link href="/">
-                            <span className="text-2xl font-bold text-gray-800">Pastırma Adası</span>
+                            <span className="text-2xl font-bold text-gray-800">Pastırma</span>
                         </Link>
                     </div>
 
@@ -126,6 +126,15 @@ export default function Navbar() {
                                             >
                                                 <MdDashboard className="mr-2 h-4 w-4" />
                                                 Hesabım
+                                            </Link>
+
+                                            <Link
+                                                href="/account/addresses"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                <MdLocationOn className="mr-2 h-4 w-4" />
+                                                Adreslerim
                                             </Link>
 
                                             <Link
@@ -221,6 +230,13 @@ export default function Navbar() {
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         Hesabım
+                                    </Link>
+                                    <Link
+                                        href="/account/addresses"
+                                        className="block px-2 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Adreslerim
                                     </Link>
                                     <Link
                                         href="/orders"
