@@ -67,7 +67,7 @@ export default function Navbar() {
                         <div className="relative">
                             <Link href="/favorites" className="relative">
                                 <Heart className="w-6 h-6" />
-                                {favoriteCount > 0 && (
+                                {mounted && favoriteCount > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                                         {favoriteCount}
                                     </span>
@@ -80,7 +80,7 @@ export default function Navbar() {
                             <Link href="/cart" aria-label="Shopping Cart">
                                 <FaShoppingCart className="h-6 w-6 text-gray-700 hover:text-gray-900" />
                             </Link>
-                            {cartItemCount > 0 && (
+                            {mounted && cartItemCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                                     {cartItemCount}
                                 </span>
@@ -210,11 +210,13 @@ export default function Navbar() {
                         </Link>
 
                         {/* Mobilde sepet toplam */}
-                        <div className="py-2">
-                            <span className="block text-gray-800 font-medium">
-                                Sepet: {cartTotal.toFixed(2)}₺ ({cartItemCount} ürün)
-                            </span>
-                        </div>
+                        {mounted && (
+                            <div className="py-2">
+                                <span className="block text-gray-800 font-medium">
+                                    Sepet: {cartTotal.toFixed(2)}₺ ({cartItemCount} ürün)
+                                </span>
+                            </div>
+                        )}
 
                         {/* ✅ Mobile kullanıcı menüsü - mounted kontrolü ile */}
                         {mounted && (

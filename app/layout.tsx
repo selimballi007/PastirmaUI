@@ -2,8 +2,21 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Pastırma',
-  description: 'Pastırma - En taze pastırmalar',
+  title: 'Pastırma - En Taze Pastırmalar',
+  description: 'Pastırma - Türkiye\'nin en kaliteli pastırma ve şarküteri ürünlerini keşfedin. Hızlı teslimat, güvenli alışveriş.',
+  keywords: ['pastırma', 'şarküteri', 'sucuk', 'et ürünleri', 'online market'],
+  openGraph: {
+    type: 'website',
+    locale: 'tr_TR',
+    siteName: 'Pastırma',
+    title: 'Pastırma - En Taze Pastırmalar',
+    description: 'Türkiye\'nin en kaliteli pastırma ve şarküteri ürünlerini keşfedin.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pastırma - En Taze Pastırmalar',
+    description: 'Türkiye\'nin en kaliteli pastırma ve şarküteri ürünlerini keşfedin.',
+  },
 }
 
 export default function RootLayout({
@@ -11,9 +24,37 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Organization Schema for SEO
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Pastırma',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/logo.png`,
+    description: 'Türkiye\'nin en kaliteli pastırma ve şarküteri ürünleri',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'Customer Service',
+      availableLanguage: 'Turkish',
+    },
+    sameAs: [
+      // Add your social media URLs here when available
+      // 'https://www.facebook.com/pastirma',
+      // 'https://www.instagram.com/pastirma',
+      // 'https://twitter.com/pastirma'
+    ],
+  };
+
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body>
+        {/* Organization Schema for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        {children}
+      </body>
     </html>
   )
 }

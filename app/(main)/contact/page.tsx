@@ -15,9 +15,15 @@ export default function ContactPage() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [showTurnstile, setShowTurnstile] = useState(false);
     const turnstileRef = useRef<TurnstileHandle>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        // Lazy load Turnstile when user starts filling the form
+        if (!showTurnstile) {
+            setShowTurnstile(true);
+        }
+
         setFormData(prev => ({
             ...prev,
             [e.target.name]: e.target.value
@@ -324,10 +330,12 @@ export default function ContactPage() {
                                     />
                                 </div>
 
-                                {/* Turnstile CAPTCHA */}
-                                <div className="flex justify-center">
-                                    <Turnstile ref={turnstileRef} />
-                                </div>
+                                {/* Turnstile CAPTCHA - Lazy loaded */}
+                                {showTurnstile && (
+                                    <div className="flex justify-center">
+                                        <Turnstile ref={turnstileRef} />
+                                    </div>
+                                )}
 
                                 {/* Submit Button */}
                                 <button

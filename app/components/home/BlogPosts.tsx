@@ -1,4 +1,5 @@
 // components/home/BlogPosts.tsx
+import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 import type { BlogPost } from '@/app/lib/server/homepage';
@@ -39,12 +40,14 @@ export default function BlogPosts({ blogPosts }: BlogPostsProps) {
                         >
                             <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-gray-300">
                                 <div className="relative h-48 overflow-hidden">
-                                    <img
+                                    <Image
                                         src={post.image}
                                         alt={post.title}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        fill
+                                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 33vw"
                                     />
-                                    <div className={`absolute top-4 left-4 ${post.categoryColor} px-3 py-1 rounded-full text-sm font-semibold`}>
+                                    <div className={`absolute top-4 left-4 z-10 ${post.categoryColor} px-3 py-1 rounded-full text-sm font-semibold`}>
                                         {post.category}
                                     </div>
                                 </div>

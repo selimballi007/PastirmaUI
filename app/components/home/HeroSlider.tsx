@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import type { HeroSlide } from '@/app/lib/server/homepage';
@@ -42,10 +43,13 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                         }`}
                 >
                     <div className="absolute inset-0">
-                        <img
+                        <Image
                             src={slide.image}
                             alt={slide.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            priority={index === 0}
+                            sizes="100vw"
                         />
                         {slide.bgColor && (
                             <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80`} />

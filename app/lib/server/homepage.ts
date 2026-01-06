@@ -139,7 +139,7 @@ function formatReviewDate(dateString: string): string {
 export async function getTestimonials(): Promise<Testimonial[]> {
     try {
         // API'den onaylanmış yorumları çek
-        const reviews = await serverFetchAPI<any[]>('review?pageSize=10');
+        const reviews = await serverFetchAPI<any[]>('reviews?pageSize=10');
 
         // Onaylanmış ve yorum içeren yorumları filtrele
         const approvedReviews = reviews
@@ -226,7 +226,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 export async function getTestimonialStats(): Promise<TestimonialStat[]> {
     try {
         // API'den tüm onaylanmış yorumları çek
-        const reviews = await serverFetchAPI<any[]>('review?pageSize=1000');
+        const reviews = await serverFetchAPI<any[]>('reviews?pageSize=1000');
 
         // Onaylanmış yorumları filtrele
         const approvedReviews = reviews.filter(review => review.status === 'approved');

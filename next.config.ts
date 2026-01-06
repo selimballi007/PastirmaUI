@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     ],
   },
   // Allow cross-origin requests from local network devices in development
-  allowedDevOrigins: ['http://192.168.1.103:3002'],
+  allowedDevOrigins: ['192.168.1.104'],
 };
 
 export default nextConfig;

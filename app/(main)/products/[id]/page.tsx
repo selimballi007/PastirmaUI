@@ -25,7 +25,8 @@ interface Props {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const product = await getProductById(parseInt(params.id));
+    const { id } = await params;
+    const product = await getProductById(parseInt(id));
 
     if (!product) {
         return {
@@ -61,7 +62,8 @@ const StarRating = ({ rating, size = 'w-5 h-5' }: { rating: number; size?: strin
 );
 
 export default async function ProductDetailPage({ params }: Props) {
-    const productId = parseInt(params.id);
+    const { id } = await params;
+    const productId = parseInt(id);
 
     // Fetch data in parallel
     const [product, reviews] = await Promise.all([
@@ -84,8 +86,56 @@ export default async function ProductDetailPage({ params }: Props) {
 
     const images = product.images || [{ imageUrl: product.imageUrl, displayOrder: 0 }];
 
+    // Calculate average rating from reviews
+    const averageRating = reviews && reviews.length > 0
+        ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviews.length
+        : 0;
+
+    // Product Schema (JSON-LD) for SEO
+    const productSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: product.description,
+        image: product.imageUrl,
+        sku: product.id.toString(),
+        brand: {
+            '@type': 'Brand',
+            name: 'Pastırma',
+        },
+        offers: {
+            '@type': 'Offer',
+            url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/products/${product.id}`,
+            priceCurrency: 'TRY',
+            price: product.price.toFixed(2),
+            priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+            availability: product.isActive && product.stock > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            seller: {
+                '@type': 'Organization',
+                name: 'Pastırma',
+            },
+        },
+        ...(reviews && reviews.length > 0 && {
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: averageRating.toFixed(1),
+                reviewCount: reviews.length,
+                bestRating: 5,
+                worstRating: 1,
+            },
+        }),
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Product Schema for SEO */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+            />
+
             {/* Breadcrumb */}
             <div className="bg-white border-b">
                 <div className="container mx-auto px-4 py-4">
