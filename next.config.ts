@@ -32,6 +32,22 @@ const nextConfig: NextConfig = {
   },
   // Allow cross-origin requests from local network devices in development
   allowedDevOrigins: ['192.168.1.104'],
+
+  // Rewrites for same-domain API proxy (Railway test/production)
+  async rewrites() {
+    // Only use rewrites in non-development environments (Railway)
+    if (process.env.NODE_ENV === 'production' && process.env.BACKEND_INTERNAL_URL) {
+      return [
+        {
+          source: '/api/:path*',
+          destination: `https://${process.env.BACKEND_INTERNAL_URL}/api/:path*`,
+        },
+      ];
+    }
+
+    // In development, no rewrites (use full backend URL)
+    return [];
+  },
 };
 
 export default nextConfig;
