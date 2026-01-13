@@ -64,7 +64,11 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
     // 2. Call backend API
     try {
         const apiStart = Date.now();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/login`, {
+        // ✅ Server Actions need absolute URLs - use API_URL (server-only) or build absolute URL
+        const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
+        const loginUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}user/login` : `${apiBaseUrl}/user/login`;
+
+        const res = await fetch(loginUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -552,7 +556,11 @@ export async function logoutAction(): Promise<{ success: boolean }> {
                 refreshToken ? `refreshToken=${refreshToken}` : ''
             ].filter(Boolean).join('; ');
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/logout`, {
+            // ✅ Server Actions need absolute URLs
+            const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
+            const logoutUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}user/logout` : `${apiBaseUrl}/user/logout`;
+
+            const res = await fetch(logoutUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -623,8 +631,12 @@ export async function refreshTokenAction(): Promise<{ success: boolean; user?: a
         console.log('[RefreshTokenAction] Sending cookies to backend');
         console.log('[RefreshTokenAction] Cookie header:', cookieHeader.substring(0, 100) + '...');
 
+        // ✅ Server Actions need absolute URLs
+        const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
+        const refreshUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}user/refresh-token` : `${apiBaseUrl}/user/refresh-token`;
+
         // Call backend refresh-token endpoint
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/refresh-token`, {
+        const res = await fetch(refreshUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
