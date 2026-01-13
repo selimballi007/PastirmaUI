@@ -68,6 +68,12 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
         const loginUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}user/login` : `${apiBaseUrl}/user/login`;
 
+        console.log('🔵 [LoginAction] API_URL:', process.env.API_URL);
+        console.log('🔵 [LoginAction] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+        console.log('🔵 [LoginAction] apiBaseUrl:', apiBaseUrl);
+        console.log('🔵 [LoginAction] loginUrl:', loginUrl);
+        console.log('🔵 [LoginAction] Calling fetch...');
+
         const res = await fetch(loginUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -168,7 +174,10 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         };
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ [LoginAction] Login error:', error);
+        console.error('❌ [LoginAction] Error type:', typeof error);
+        console.error('❌ [LoginAction] Error message:', error instanceof Error ? error.message : String(error));
+        console.error('❌ [LoginAction] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         return {
             success: false,
             message: "❌ Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
