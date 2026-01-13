@@ -14,7 +14,7 @@ const LoginSchema = z.object({
     password: z.string()
         .min(6, "Şifre en az 6 karakter olmalı.")
         .max(10, "Şifre çok uzun."),
-    captchaToken: z.string().min(1, "ReCAPTCHA doğrulaması gerekli."),
+    captchaToken: z.string().min(1, "ReCAPTCHA doğrulaması gerekli.").optional().default("DISABLED"),
 });
 
 const ResendSchema = z.object({

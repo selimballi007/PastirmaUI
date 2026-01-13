@@ -97,16 +97,28 @@ export default function LoginForm() {
         });
 
         try {
-            const token = await getCaptchaToken();
-            if (!token) {
-                setIsProcessing(false);
-                return;
-            }
+            // ✅ Check if Turnstile is disabled (for Railway deployment)
+            const isTurnstileDisabled = process.env.NEXT_PUBLIC_DISABLE_TURNSTILE === 'true';
 
-            formData.append('captchaToken', token);
-            startTransition(() => {
-                loginFormAction(formData);
-            });
+            if (isTurnstileDisabled) {
+                // Skip Turnstile validation
+                formData.append('captchaToken', 'DISABLED');
+                startTransition(() => {
+                    loginFormAction(formData);
+                });
+            } else {
+                // Normal Turnstile flow
+                const token = await getCaptchaToken();
+                if (!token) {
+                    setIsProcessing(false);
+                    return;
+                }
+
+                formData.append('captchaToken', token);
+                startTransition(() => {
+                    loginFormAction(formData);
+                });
+            }
         } catch (error) {
             setIsProcessing(false);
         }
@@ -120,16 +132,28 @@ export default function LoginForm() {
         });
 
         try {
-            const token = await getCaptchaToken();
-            if (!token) {
-                setIsProcessing(false);
-                return;
-            }
+            // ✅ Check if Turnstile is disabled (for Railway deployment)
+            const isTurnstileDisabled = process.env.NEXT_PUBLIC_DISABLE_TURNSTILE === 'true';
 
-            formData.append('captchaToken', token);
-            startTransition(() => {
-                resendFormAction(formData);
-            });
+            if (isTurnstileDisabled) {
+                // Skip Turnstile validation
+                formData.append('captchaToken', 'DISABLED');
+                startTransition(() => {
+                    resendFormAction(formData);
+                });
+            } else {
+                // Normal Turnstile flow
+                const token = await getCaptchaToken();
+                if (!token) {
+                    setIsProcessing(false);
+                    return;
+                }
+
+                formData.append('captchaToken', token);
+                startTransition(() => {
+                    resendFormAction(formData);
+                });
+            }
         } catch (error) {
             setIsProcessing(false);
         }
@@ -257,10 +281,12 @@ export default function LoginForm() {
                     </div>
                 )}
 
-                {/* Turnstile CAPTCHA */}
-                <div className="flex justify-center">
-                    <Turnstile ref={turnstileRef} />
-                </div>
+                {/* Turnstile CAPTCHA - Hidden when disabled */}
+                {process.env.NEXT_PUBLIC_DISABLE_TURNSTILE !== 'true' && (
+                    <div className="flex justify-center">
+                        <Turnstile ref={turnstileRef} />
+                    </div>
+                )}
 
                 {/* Sign Up Link */}
                 <div className="text-center text-sm text-gray-600">
