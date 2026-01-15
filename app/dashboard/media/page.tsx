@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cloudinaryService } from '@/app/lib/services/cloudinaryService';
 import type { CloudinaryImage } from '@/app/types/dashboard';
+import toast from 'react-hot-toast';
 
 export default function MediaManagementPage() {
     const [images, setImages] = useState<CloudinaryImage[]>([]);
@@ -63,15 +64,15 @@ export default function MediaManagementPage() {
             const result = await cloudinaryService.deleteImage(image.publicId, true);
 
             if (result.success) {
-                alert(result.message);
+                toast.success(result.message);
                 // Refresh the images list
                 await loadImages();
             } else {
-                alert('Silme işlemi başarısız: ' + result.message);
+                toast.error('Silme işlemi başarısız: ' + result.message);
             }
         } catch (err: any) {
             console.error('Error deleting image:', err);
-            alert('Görsel silinirken hata oluştu: ' + (err.message || 'Bilinmeyen hata'));
+            toast.error('Görsel silinirken hata oluştu: ' + (err.message || 'Bilinmeyen hata'));
         } finally {
             setDeletingImage(null);
         }

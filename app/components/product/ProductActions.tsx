@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ShoppingCart, Heart, Share2, Minus, Plus, X, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '@/app/lib/store/authStore';
 import { useFavoriteStore } from '@/app/lib/store/favoriteStore';
 import { useCartStore } from '@/app/lib/store/cartStore';
@@ -39,7 +40,7 @@ export default function ProductActions({
 
     const handleToggleFavorite = async () => {
         if (!user) {
-            alert('Favorilere eklemek için giriş yapmalısınız.');
+            toast('Favorilere eklemek için giriş yapmalısınız.', { icon: '⚠️' });
             return;
         }
 
@@ -50,7 +51,7 @@ export default function ProductActions({
                 await addToFavorites(productId);
             }
         } catch (error: any) {
-            alert(error.message || 'Bir hata oluştu.');
+            toast.error(error.message || 'Bir hata oluştu.');
         }
     };
 
@@ -70,7 +71,7 @@ export default function ProductActions({
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
         } catch (error: any) {
-            alert(error.message || 'Sepete eklenirken bir hata oluştu.');
+            toast.error(error.message || 'Sepete eklenirken bir hata oluştu.');
         }
     };
 
@@ -175,7 +176,7 @@ export default function ProductActions({
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(window.location.href);
-                                    alert('Link kopyalandı!');
+                                    toast.success('Link kopyalandı!');
                                     setShowShareModal(false);
                                 }}
                                 className="w-full px-6 py-3 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 font-semibold"
