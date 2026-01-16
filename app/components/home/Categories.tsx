@@ -25,7 +25,7 @@ export default function Categories({ categories }: CategoriesProps) {
                     {categories.map((category) => (
                         <Link
                             key={category.name}
-                            href={`/products?category=${category.name}`}
+                            href={`/products?category=${category.id}`}
                             className={`${category.color} rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105 text-center`}
                         >
                             <div className="text-4xl mb-3">{category.icon}</div>

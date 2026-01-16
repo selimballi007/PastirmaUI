@@ -36,9 +36,17 @@ export async function parseFetchResponse<T>(response: Response): Promise<T> {
 
 /**
  * Get API base URL
+ * During build (SSG): Uses API_URL (full backend URL with /api/ included)
+ * During runtime: Uses NEXT_PUBLIC_API_URL (relative /api for same-domain)
  */
 export function getApiBaseUrl(): string {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/';
+    // Server-side during build: use full backend URL
+    // API_URL should already include /api/ (e.g., https://backend.com/api/)
+    if (typeof window === 'undefined' && process.env.API_URL) {
+        return process.env.API_URL;
+    }
+    // Client-side or server-side runtime: use relative URL
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
 }
 
 /**

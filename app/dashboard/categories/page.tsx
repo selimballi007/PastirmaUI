@@ -14,6 +14,7 @@ import {
     Search,
     X,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function CategoriesPage() {
     const { categories, fetchCategories, loading } = useCategoryStore();
@@ -29,18 +30,18 @@ export default function CategoriesPage() {
     const handleCreate = async () => {
         try {
             if (!formData.name.trim()) {
-                alert('Kategori adı zorunludur!');
+                toast('Kategori adı zorunludur!', { icon: '⚠️' });
                 return;
             }
 
             await categoryService.createCategory(formData);
-            alert('Kategori başarıyla oluşturuldu!');
+            toast.success('Kategori başarıyla oluşturuldu!');
             setIsModalOpen(false);
             setFormData({ name: '', icon: '' });
             fetchCategories();
         } catch (error: any) {
             console.error('Error creating category:', error);
-            alert(error.message || 'Kategori oluşturulurken bir hata oluştu.');
+            toast.error(error.message || 'Kategori oluşturulurken bir hata oluştu.');
         }
     };
 
@@ -48,19 +49,19 @@ export default function CategoriesPage() {
         try {
             if (!editingCategory) return;
             if (!formData.name.trim()) {
-                alert('Kategori adı zorunludur!');
+                toast('Kategori adı zorunludur!', { icon: '⚠️' });
                 return;
             }
 
             await categoryService.updateCategory(editingCategory.id, formData);
-            alert('Kategori başarıyla güncellendi!');
+            toast.success('Kategori başarıyla güncellendi!');
             setIsModalOpen(false);
             setEditingCategory(null);
             setFormData({ name: '', icon: '' });
             fetchCategories();
         } catch (error: any) {
             console.error('Error updating category:', error);
-            alert(error.message || 'Kategori güncellenirken bir hata oluştu.');
+            toast.error(error.message || 'Kategori güncellenirken bir hata oluştu.');
         }
     };
 
@@ -69,11 +70,11 @@ export default function CategoriesPage() {
 
         try {
             await categoryService.deleteCategory(id);
-            alert('Kategori başarıyla silindi!');
+            toast.success('Kategori başarıyla silindi!');
             fetchCategories();
         } catch (error: any) {
             console.error('Error deleting category:', error);
-            alert(error.message || 'Kategori silinirken bir hata oluştu.');
+            toast.error(error.message || 'Kategori silinirken bir hata oluştu.');
         }
     };
 
@@ -83,7 +84,7 @@ export default function CategoriesPage() {
             fetchCategories();
         } catch (error) {
             console.error('Error toggling status:', error);
-            alert('Durum değiştirilirken bir hata oluştu.');
+            toast.error('Durum değiştirilirken bir hata oluştu.');
         }
     };
 

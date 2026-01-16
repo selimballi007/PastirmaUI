@@ -3,6 +3,7 @@ import { X, Upload, Save } from 'lucide-react';
 import { CldUploadWidget } from 'next-cloudinary';
 import { useState, useEffect } from 'react';
 import { HeroSlide } from '@/app/lib/services/heroSlideService';
+import toast from 'react-hot-toast';
 
 interface SlideModalProps {
     isOpen: boolean;
@@ -56,11 +57,11 @@ export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: Sl
 
     const handleSubmit = () => {
         if (!formData.title.trim()) {
-            alert('Başlık zorunludur!');
+            toast('Başlık zorunludur!', { icon: '⚠️' });
             return;
         }
         if (!formData.imageUrl.trim()) {
-            alert('Görsel zorunludur!');
+            toast('Görsel zorunludur!', { icon: '⚠️' });
             return;
         }
         onSave(formData);
@@ -209,11 +210,11 @@ export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: Sl
                                 const imageUrl = result.info.secure_url;
                                 console.log('Image URL:', imageUrl);
                                 setFormData(prev => ({ ...prev, imageUrl }));
-                                alert('Görsel başarıyla yüklendi!');
+                                toast.success('Görsel başarıyla yüklendi!');
                             }}
                             onError={(error: any) => {
                                 console.error('Upload error:', error);
-                                alert('Görsel yüklenirken hata oluştu: ' + error.message);
+                                toast.error('Görsel yüklenirken hata oluştu: ' + error.message);
                             }}
                             options={{
                                 folder: 'hero-slides',

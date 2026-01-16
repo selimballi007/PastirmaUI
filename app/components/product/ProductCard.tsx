@@ -17,6 +17,7 @@ import {
     MessageCircle,
     Check,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ProductCardProps {
     id: number;
@@ -82,7 +83,7 @@ export default function ProductCard({
         e.stopPropagation();
 
         if (!user) {
-            alert('Favorilere eklemek için giriş yapmalısınız.');
+            toast('Favorilere eklemek için giriş yapmalısınız.', { icon: '⚠️' });
             return;
         }
 
@@ -95,7 +96,7 @@ export default function ProductCard({
                 await addToFavorites(id);
             }
         } catch (error: any) {
-            alert(error.message || 'Bir hata oluştu.');
+            toast.error(error.message || 'Bir hata oluştu.');
         } finally {
             setFavoriteLoading(false);
         }
@@ -143,7 +144,7 @@ export default function ProductCard({
             // Call optional callback if provided
             onAddToCart?.(id);
         } catch (error: any) {
-            alert(error.message || 'Sepete eklenirken bir hata oluştu.');
+            toast.error(error.message || 'Sepete eklenirken bir hata oluştu.');
         }
     };
 

@@ -4,6 +4,7 @@
 import ProductCard from '@/app/components/product/ProductCard';
 import Link from 'next/link';
 import { Package, TrendingUp } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { Product } from '@/app/types/dashboard';
 
 interface BestSellersProps {
@@ -15,7 +16,7 @@ export default function BestSellers({ products }: BestSellersProps) {
     const handleAddToCart = (productId: number) => {
         // TODO: Cart store'a ekle
         console.log('Add to cart:', productId);
-        alert('Ürün sepete eklendi!'); // Geçici
+        toast.success('Ürün sepete eklendi!');
     };
 
     const handleQuickView = (productId: number) => {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, ArrowLeft, Tag } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useCartStore } from '@/app/lib/store/cartStore';
 
 export default function CartPage() {
@@ -19,7 +20,7 @@ export default function CartPage() {
         try {
             updateQuantity(productId, newQuantity);
         } catch (error: unknown) {
-            alert((error as Error).message);
+            toast.error((error as Error).message);
         }
     };
 

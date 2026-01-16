@@ -18,6 +18,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Page-specific Review interface (different from dashboard.ts Review)
 interface Review {
@@ -91,9 +92,10 @@ export default function ReviewsPage() {
             await fetchAPI<void>(`reviews/${reviewId}/approve`, { method: 'PUT' });
             fetchReviews();
             fetchStats();
+            toast.success('Yorum onaylandı.');
         } catch (error) {
             console.error('Error approving review:', error);
-            alert('Yorum onaylanırken bir hata oluştu.');
+            toast.error('Yorum onaylanırken bir hata oluştu.');
         }
     };
 
@@ -104,9 +106,10 @@ export default function ReviewsPage() {
             await fetchAPI<void>(`reviews/${reviewId}/reject`, { method: 'PUT' });
             fetchReviews();
             fetchStats();
+            toast.success('Yorum reddedildi.');
         } catch (error) {
             console.error('Error rejecting review:', error);
-            alert('Yorum reddedilirken bir hata oluştu.');
+            toast.error('Yorum reddedilirken bir hata oluştu.');
         }
     };
 

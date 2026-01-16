@@ -20,6 +20,7 @@ import { cloudinaryService, extractPublicId } from '@/app/lib/services/cloudinar
 import type { CreateProductRequest, UpdateProductRequest } from '@/app/types/dashboard';
 import { useCategoryStore } from '@/app/lib/store/categoryStore';
 import type { ProductImage } from '@/app/types/dashboard';
+import toast from 'react-hot-toast';
 
 interface FormData {
     name: string;
@@ -319,7 +320,7 @@ export default function ProductFormPage() {
             setFormData(prev => ({ ...prev, imageUrl: '' }));
         } catch (error) {
             console.error('Error in handleDeleteMainImage:', error);
-            alert('Beklenmeyen bir hata oluştu.');
+            toast.error('Beklenmeyen bir hata oluştu.');
         }
     };
 
@@ -352,7 +353,7 @@ export default function ProductFormPage() {
             handleRemoveImage(index);
         } catch (error) {
             console.error('Error in handleDeleteProductImage:', error);
-            alert('Beklenmeyen bir hata oluştu.');
+            toast.error('Beklenmeyen bir hata oluştu.');
         }
     };
 
@@ -791,11 +792,11 @@ export default function ProductFormPage() {
                                     const imageUrl = result.info.secure_url;
                                     console.log('Image URL:', imageUrl);
                                     handleAddImage(imageUrl);
-                                    alert('Görsel başarıyla yüklendi!');
+                                    toast.success('Görsel başarıyla yüklendi!');
                                 }}
                                 onError={(error: any) => {
                                     console.error('Upload error:', error);
-                                    alert('Görsel yüklenirken hata oluştu: ' + error.message);
+                                    toast.error('Görsel yüklenirken hata oluştu: ' + error.message);
                                 }}
                                 options={{
                                     folder: 'products',

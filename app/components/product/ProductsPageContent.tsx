@@ -13,6 +13,7 @@ import {
     List,
     Search,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ProductsPageContentProps {
     initialProducts: Product[];
@@ -52,7 +53,7 @@ export default function ProductsPageContent({
 
     const handleAddToCart = (productId: number) => {
         console.log('Add to cart:', productId);
-        alert('Ürün sepete eklendi!');
+        toast.success('Ürün sepete eklendi!');
     };
 
     const handleQuickView = (productId: number) => {

@@ -2,8 +2,17 @@ import { useEffect, useState, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useNotificationStore } from '@/app/lib/store/notificationStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
-const HUB_URL = API_URL.replace('/api/', '/hubs/order');
+// In production (Railway), use relative URL to go through Next.js rewrites
+// In development, use absolute backend URL
+const getHubUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return '/hubs/order'; // Relative URL - will be rewritten by Next.js
+  }
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
+  return API_URL.replace('/api/', '/hubs/order'); // Absolute URL for development
+};
+
+const HUB_URL = getHubUrl();
 
 export const useOrderHub = () => {
   const [isConnected, setIsConnected] = useState(false);
