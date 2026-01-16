@@ -6,6 +6,7 @@ import { useAuthStore } from '@/app/lib/store/authStore';
 import { orderService } from '@/app/lib/services/orderService';
 import type { Order, PaginatedOrders } from '@/app/types/order';
 import { OrderStatus, OrderStatusLabels, PaymentMethodLabels } from '@/app/types/order';
+import toast from 'react-hot-toast';
 
 export default function UserOrdersPage() {
   const router = useRouter();
@@ -74,9 +75,9 @@ export default function UserOrdersPage() {
     try {
       await orderService.updateOrderStatus(orderId.toString(), OrderStatus.Cancelled);
       await fetchOrders();
-      alert('Sipariş iptal edildi.');
+      toast.success('Sipariş iptal edildi.');
     } catch (err: unknown) {
-      alert((err as Error).message || 'Sipariş iptal edilirken bir hata oluştu.');
+      toast.error((err as Error).message || 'Sipariş iptal edilirken bir hata oluştu.');
     }
   };
 

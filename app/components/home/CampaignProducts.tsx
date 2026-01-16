@@ -3,6 +3,7 @@
 
 import ProductCard from '@/app/components/product/ProductCard';
 import { Package, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { Product } from '@/app/types/dashboard';
 
 interface CampaignProductsProps {
@@ -14,7 +15,7 @@ export default function CampaignProducts({ products }: CampaignProductsProps) {
     const handleAddToCart = (productId: number) => {
         // TODO: Cart store'a ekle
         console.log('Add to cart:', productId);
-        alert('Ürün sepete eklendi!'); // Geçici
+        toast.success('Ürün sepete eklendi!');
     };
 
     const handleQuickView = (productId: number) => {

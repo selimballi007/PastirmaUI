@@ -15,6 +15,7 @@ import {
     Eye,
     Trash2,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ContactMessagesPage() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -142,10 +143,10 @@ export default function ContactMessagesPage() {
             // Refresh messages to show updated status
             await fetchMessages();
 
-            alert('Yanıt başarıyla gönderildi!');
+            toast.success('Yanıt başarıyla gönderildi!');
         } catch (error) {
             console.error('Error sending reply:', error);
-            alert('Yanıt gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+            toast.error('Yanıt gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
         } finally {
             setIsSending(false);
         }

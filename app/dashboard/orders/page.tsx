@@ -5,6 +5,7 @@ import { orderService } from '@/app/lib/services/orderService';
 import type { Order, PaginatedOrders } from '@/app/types/order';
 import { OrderStatus, OrderStatusLabels, PaymentMethodLabels } from '@/app/types/order';
 import { useNotificationStore } from '@/app/lib/store/notificationStore';
+import toast from 'react-hot-toast';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
@@ -58,9 +59,9 @@ export default function AdminOrdersPage() {
         setSelectedOrder({ ...selectedOrder, orderStatus: newStatus });
       }
 
-      alert('Sipariş durumu güncellendi.');
+      toast.success('Sipariş durumu güncellendi.');
     } catch (err: any) {
-      alert(err.message || 'Sipariş durumu güncellenirken bir hata oluştu.');
+      toast.error(err.message || 'Sipariş durumu güncellenirken bir hata oluştu.');
     } finally {
       setUpdatingStatus(false);
     }

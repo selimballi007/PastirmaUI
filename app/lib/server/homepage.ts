@@ -41,6 +41,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
 
 // Categories data
 export interface Category {
+    id: number;
     name: string;
     icon: string;
     count: number;
@@ -67,6 +68,7 @@ export async function getCategories(): Promise<Category[]> {
         return categories
             .filter(cat => cat.isActive)
             .map((cat, index) => ({
+                id: cat.id,
                 name: cat.name,
                 icon: cat.icon || '📦',
                 count: cat.productCount || 0,

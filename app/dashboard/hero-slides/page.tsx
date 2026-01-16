@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Image as ImageIcon } from 'lucide-react';
 import { heroSlideService, type HeroSlide } from '@/app/lib/services/heroSlideService';
+import toast from 'react-hot-toast';
 import SlideCard from '@/app/components/dashboard/heroSlides/slideCard';
 import SlideModal from '@/app/components/dashboard/heroSlides/slideModal';
 
@@ -24,7 +25,7 @@ export default function HeroSlidesPage() {
             setSlides(result.sort((a, b) => a.displayOrder - b.displayOrder));
         } catch (error) {
             console.error('Error fetching slides:', error);
-            alert('Slider\'lar yüklenirken bir hata oluştu.');
+            toast.error('Slider\'lar yüklenirken bir hata oluştu.');
         } finally {
             setLoading(false);
         }
@@ -34,15 +35,15 @@ export default function HeroSlidesPage() {
         try {
             if (editingSlide) {
                 await heroSlideService.updateSlide(editingSlide.id, data);
-                alert('Slide başarıyla güncellendi!');
+                toast.success('Slide başarıyla güncellendi!');
             } else {
                 await heroSlideService.createSlide(data);
-                alert('Slide başarıyla oluşturuldu!');
+                toast.success('Slide başarıyla oluşturuldu!');
             }
             closeModal();
             fetchSlides();
         } catch (error: any) {
-            alert(error.message || 'Bir hata oluştu.');
+            toast.error(error.message || 'Bir hata oluştu.');
         }
     };
 
@@ -51,10 +52,10 @@ export default function HeroSlidesPage() {
 
         try {
             await heroSlideService.deleteSlide(id);
-            alert('Slide başarıyla silindi!');
+            toast.success('Slide başarıyla silindi!');
             fetchSlides();
         } catch (error: any) {
-            alert(error.message || 'Slide silinirken bir hata oluştu.');
+            toast.error(error.message || 'Slide silinirken bir hata oluştu.');
         }
     };
 
@@ -63,7 +64,7 @@ export default function HeroSlidesPage() {
             await heroSlideService.toggleSlideStatus(id);
             fetchSlides();
         } catch (error) {
-            alert('Durum değiştirilirken bir hata oluştu.');
+            toast.error('Durum değiştirilirken bir hata oluştu.');
         }
     };
 
