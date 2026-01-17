@@ -39,6 +39,13 @@ export default function Navbar() {
         setMounted(true)
     }, [])
 
+    // ✅ User logout olduğunda dropdown menu'yü kapat
+    useEffect(() => {
+        if (!user) {
+            setIsUserMenuOpen(false)
+        }
+    }, [user])
+
     // ✅ Logout işlemi
     const handleLogout = async () => { await logOut() }
 
