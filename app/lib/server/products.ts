@@ -126,7 +126,7 @@ export async function getRelatedProducts(categoryId: number, excludeId: number, 
  */
 export async function getCategoriesWithCount() {
     try {
-        return await serverFetchAPI<any[]>('categories/with-product-count');
+        return await serverFetchAPI<any[]>('category/with-product-count');
     } catch (error) {
         console.error('[Server] Error fetching categories:', error);
         return [];
