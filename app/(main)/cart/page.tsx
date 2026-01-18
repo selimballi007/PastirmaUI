@@ -94,44 +94,64 @@ export default function CartPage() {
                         return (
                             <div
                                 key={item.productId}
-                                className={`bg-white rounded-xl p-6 shadow-sm border border-gray-200 transition-all duration-300 ${
+                                className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 transition-all duration-300 ${
                                     isRemoving ? 'opacity-0 scale-95' : ''
                                 }`}
                             >
-                                <div className="flex gap-6">
-                                    {/* Product Image */}
-                                    <Link href={`/products/${item.productId}`} className="flex-shrink-0">
-                                        <div className="w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
-                                            <Image
-                                                src={item.productImage}
-                                                alt={item.productName}
-                                                width={128}
-                                                height={128}
-                                                className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
-                                            />
+                                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                                    {/* Mobile: Image + Name + Total in one row */}
+                                    <div className="flex gap-4 sm:contents">
+                                        {/* Product Image */}
+                                        <Link href={`/products/${item.productId}`} className="flex-shrink-0">
+                                            <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-lg overflow-hidden border border-gray-200">
+                                                <Image
+                                                    src={item.productImage}
+                                                    alt={item.productName}
+                                                    width={128}
+                                                    height={128}
+                                                    className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
+                                                />
+                                            </div>
+                                        </Link>
+
+                                        {/* Mobile: Name + Total */}
+                                        <div className="flex-1 flex justify-between items-start sm:hidden min-w-0">
+                                            <Link
+                                                href={`/products/${item.productId}`}
+                                                className="text-base font-semibold text-gray-900 hover:text-orange-600 line-clamp-2 pr-2"
+                                            >
+                                                {item.productName}
+                                            </Link>
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-xs text-gray-500">Toplam</p>
+                                                <p className="text-lg font-bold text-gray-900">
+                                                    {(itemPrice * item.quantity).toFixed(2)}₺
+                                                </p>
+                                            </div>
                                         </div>
-                                    </Link>
+                                    </div>
 
                                     {/* Product Info */}
                                     <div className="flex-1 min-w-0">
+                                        {/* Desktop: Product Name */}
                                         <Link
                                             href={`/products/${item.productId}`}
-                                            className="text-lg font-semibold text-gray-900 hover:text-orange-600 block mb-2"
+                                            className="hidden sm:block text-lg font-semibold text-gray-900 hover:text-orange-600 mb-2"
                                         >
                                             {item.productName}
                                         </Link>
 
                                         {/* Price */}
-                                        <div className="flex items-baseline gap-3 mb-4">
-                                            <span className="text-2xl font-bold text-gray-900">
+                                        <div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                            <span className="text-xl sm:text-2xl font-bold text-gray-900">
                                                 {itemPrice.toFixed(2)}₺
                                             </span>
                                             {item.discount && (
                                                 <>
-                                                    <span className="text-lg text-gray-500 line-through">
+                                                    <span className="text-sm sm:text-lg text-gray-500 line-through">
                                                         {item.price.toFixed(2)}₺
                                                     </span>
-                                                    <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded">
+                                                    <span className="px-2 py-0.5 sm:py-1 bg-green-100 text-green-700 text-xs sm:text-sm font-semibold rounded">
                                                         %{item.discount} İndirim
                                                     </span>
                                                 </>
@@ -139,20 +159,22 @@ export default function CartPage() {
                                         </div>
 
                                         {/* Quantity Controls */}
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
                                             <div className="flex items-center border-2 border-gray-300 rounded-lg">
                                                 <button
                                                     onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
                                                     disabled={item.quantity <= 1}
-                                                    className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="p-2 sm:p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
-                                                <span className="px-4 text-lg font-semibold">{item.quantity}</span>
+                                                <span className="px-3 sm:px-4 text-base sm:text-lg font-semibold min-w-[2rem] text-center">
+                                                    {item.quantity}
+                                                </span>
                                                 <button
                                                     onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                                                     disabled={item.quantity >= item.stock}
-                                                    className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="p-2 sm:p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                                                 >
                                                     <Plus className="w-4 h-4" />
                                                 </button>
@@ -160,7 +182,7 @@ export default function CartPage() {
 
                                             <button
                                                 onClick={() => handleRemoveItem(item.productId)}
-                                                className="text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
+                                                className="text-red-600 hover:text-red-700 font-medium flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                                 Kaldır
@@ -169,14 +191,14 @@ export default function CartPage() {
 
                                         {/* Stock Warning */}
                                         {item.quantity === item.stock && (
-                                            <p className="text-orange-600 text-sm mt-2">
+                                            <p className="text-orange-600 text-xs sm:text-sm mt-2">
                                                 Maksimum stok adedine ulaştınız
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Item Total */}
-                                    <div className="text-right">
+                                    {/* Desktop: Item Total */}
+                                    <div className="hidden sm:block text-right flex-shrink-0">
                                         <p className="text-sm text-gray-600 mb-1">Toplam</p>
                                         <p className="text-2xl font-bold text-gray-900">
                                             {(itemPrice * item.quantity).toFixed(2)}₺
