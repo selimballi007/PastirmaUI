@@ -68,12 +68,6 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
         const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
         const loginUrl = apiBaseUrl.endsWith('/') ? `${apiBaseUrl}user/login` : `${apiBaseUrl}/user/login`;
 
-        console.log('🔵 [LoginAction] API_URL:', process.env.API_URL);
-        console.log('🔵 [LoginAction] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-        console.log('🔵 [LoginAction] apiBaseUrl:', apiBaseUrl);
-        console.log('🔵 [LoginAction] loginUrl:', loginUrl);
-        console.log('🔵 [LoginAction] Calling fetch...');
-
         const res = await fetch(loginUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -117,7 +111,6 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
 
         // ✅ Backend'den gelen cookie'leri Next.js'e manuel olarak set et
         const setCookieHeader = res.headers.get('set-cookie');
-        console.log("Cookies from backend:", setCookieHeader);
 
         if (setCookieHeader) {
             // Set-Cookie header'ı parse et (multiple cookies comma ile ayrılmış olabilir)
@@ -152,20 +145,10 @@ export async function loginAction(prevState: ActionState | null, formData: FormD
                         cookieOptions.maxAge = parseInt(maxAgeOption.split('=')[1]);
                     }
 
-                    console.log(`Setting cookie: ${name}`, cookieOptions);
                     cookieStore.set(name, value, cookieOptions);
                 }
             }
         }
-
-        const totalTime = Date.now() - startTime;
-        const apiTime = apiEnd - apiStart;
-
-        console.log(`🚀 Login Performance:
-        - Total Time: ${totalTime}ms
-        - API Time: ${apiTime}ms
-        - Processing Time: ${totalTime - apiTime}ms`);
-        console.log("User data:", data.user);
 
         return {
             success: true,
@@ -550,7 +533,6 @@ export async function resendVerificationByTokenAction(prevState: ActionState | n
  */
 export async function logoutAction(): Promise<{ success: boolean }> {
     try {
-        console.log('🔴 [LogoutAction] Starting logout process...');
 
         // 1. Call backend logout endpoint (optional - mainly for token invalidation on server)
         try {
@@ -577,11 +559,6 @@ export async function logoutAction(): Promise<{ success: boolean }> {
                 },
             });
 
-            if (res.ok) {
-                console.log('✅ [LogoutAction] Backend logout successful');
-            } else {
-                console.log('⚠️ [LogoutAction] Backend logout failed, continuing with cookie cleanup');
-            }
         } catch (error) {
             console.log('⚠️ [LogoutAction] Backend logout request failed:', error);
             // Continue anyway - we'll clear cookies manually
@@ -593,8 +570,6 @@ export async function logoutAction(): Promise<{ success: boolean }> {
 
         cookieStore.delete('accessToken');
         cookieStore.delete('refreshToken');
-
-        console.log('✅ [LogoutAction] Cookies deleted successfully');
 
         return { success: true };
 
@@ -622,23 +597,18 @@ export async function logoutAction(): Promise<{ success: boolean }> {
  */
 export async function refreshTokenAction(): Promise<{ success: boolean; user?: any }> {
     try {
-        console.log('🔄 [RefreshTokenAction] Starting token refresh...');
-
         // Get current cookies to send with request
         const cookieStore = await cookies();
         const accessToken = cookieStore.get('accessToken')?.value;
         const refreshToken = cookieStore.get('refreshToken')?.value;
 
         if (!accessToken || !refreshToken) {
-            console.log('❌ [RefreshTokenAction] No tokens found in cookies');
             return { success: false };
         }
 
         // ✅ CRITICAL: Manually send cookies in Cookie header
         // Server Actions run on Next.js server, not browser - must manually forward cookies
         const cookieHeader = `accessToken=${accessToken}; refreshToken=${refreshToken}`;
-        console.log('[RefreshTokenAction] Sending cookies to backend');
-        console.log('[RefreshTokenAction] Cookie header:', cookieHeader.substring(0, 100) + '...');
 
         // ✅ Server Actions need absolute URLs
         const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5296/api/';
@@ -652,8 +622,6 @@ export async function refreshTokenAction(): Promise<{ success: boolean; user?: a
                 'Cookie': cookieHeader, // ✅ Manually send cookies
             },
         });
-
-        console.log('[RefreshTokenAction] Response status:', res.status);
 
         if (!res.ok) {
             // ✅ CRITICAL: Log the actual error response from backend
@@ -676,7 +644,6 @@ export async function refreshTokenAction(): Promise<{ success: boolean; user?: a
 
         // ✅ CRITICAL: Manually parse and set new cookies from backend response
         const setCookieHeader = res.headers.get('set-cookie');
-        console.log('[RefreshTokenAction] Set-Cookie header:', setCookieHeader);
 
         if (setCookieHeader) {
             const cookieStrings = setCookieHeader.split(', ');
@@ -704,13 +671,11 @@ export async function refreshTokenAction(): Promise<{ success: boolean; user?: a
                         cookieOptions.maxAge = parseInt(maxAgeOption.split('=')[1]);
                     }
 
-                    console.log(`✅ [RefreshTokenAction] Setting cookie: ${name}`);
                     newCookieStore.set(name, value, cookieOptions);
                 }
             }
         }
 
-        console.log('✅ [RefreshTokenAction] Token refresh successful');
         return { success: true, user: data.user };
 
     } catch (error) {

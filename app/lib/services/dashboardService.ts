@@ -11,7 +11,6 @@ export const dashboardService = {
      * GET /dashboard
      */
     async getDashboardData(): Promise<DashboardResponse> {
-        console.log('[dashboardService] Getting dashboard data');
         return await fetchAPI<DashboardResponse>('dashboard');
     },
 
@@ -20,7 +19,6 @@ export const dashboardService = {
      * GET /dashboard/stats
      */
     async getStats() {
-        console.log('[dashboardService] Getting stats');
         return await fetchAPI('dashboard/stats');
     },
 
@@ -29,7 +27,6 @@ export const dashboardService = {
      * GET /dashboard/orders/recent?limit=10
      */
     async getRecentOrders(limit: number = 10): Promise<Order[]> {
-        console.log('[dashboardService] Getting recent orders, limit:', limit);
         return await fetchAPI<Order[]>(`dashboard/orders/recent?limit=${limit}`);
     },
 
@@ -38,7 +35,6 @@ export const dashboardService = {
      * GET /dashboard/sales?period=month
      */
     async getSalesData(period: 'week' | 'month' | 'year' = 'month'): Promise<any[]> {
-        console.log('[dashboardService] Getting sales data, period:', period);
         return await fetchAPI(`dashboard/sales?period=${period}`);
     },
 
@@ -47,7 +43,6 @@ export const dashboardService = {
      * GET /dashboard/quick-stats
      */
     async getQuickStats() {
-        console.log('[dashboardService] Getting quick stats');
         return await fetchAPI('dashboard/quick-stats');
     },
 
@@ -56,7 +51,6 @@ export const dashboardService = {
      * GET /orders/{orderId}
      */
     async getOrderDetails(orderId: string): Promise<Order> {
-        console.log('[dashboardService] Getting order details, id:', orderId);
         return await fetchAPI<Order>(`order/${orderId}`);
     },
 
@@ -75,7 +69,6 @@ export const dashboardService = {
             ...(status && { status }),
         });
 
-        console.log('[dashboardService] Getting orders with params:', params.toString());
         return await fetchAPI<PaginatedResponse<Order>>(`order?${params.toString()}`);
     },
 
@@ -84,7 +77,6 @@ export const dashboardService = {
      * PATCH /orders/{orderId}/status
      */
     async updateOrderStatus(orderId: string, status: string) {
-        console.log('[dashboardService] Updating order status:', orderId, status);
         return await fetchAPI(`order/${orderId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
@@ -96,7 +88,6 @@ export const dashboardService = {
      * GET /dashboard/notifications/count
      */
     async getNotificationCount(): Promise<number> {
-        console.log('[dashboardService] Getting notification count');
         const data = await fetchAPI<{ count: number }>('dashboard/notifications/count');
         return data.count;
     },
@@ -106,7 +97,6 @@ export const dashboardService = {
      * GET /dashboard/alerts/low-stock
      */
     async getLowStockAlerts() {
-        console.log('[dashboardService] Getting low stock alerts');
         return await fetchAPI('dashboard/alerts/low-stock');
     },
 };

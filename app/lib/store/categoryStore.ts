@@ -37,7 +37,6 @@ export const useCategoryStore = create<CategoryStoreState>()(
                         loading: false
                     });
                 } catch (error) {
-                    console.log('Error fetching categories:', error);
                     set({ loading: false });
                 }
             },
@@ -52,7 +51,6 @@ export const useCategoryStore = create<CategoryStoreState>()(
                         loading: false
                     })
                 } catch (error) {
-                    console.log('Error refreshing categories:', error);
                     set({ loading: false });
                 }
             },

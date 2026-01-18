@@ -9,11 +9,9 @@ let refreshPromise: Promise<{ user: any } | null> | null = null;
 
 async function refreshAccessToken() {
     if (refreshPromise) {
-        console.log('[API] Waiting for ongoing refresh...');
         return refreshPromise;
     }
 
-    console.log('[API] Starting token refresh...');
     refreshPromise = (async () => {
         try {
             // ✅ Use Server Action to properly handle cookie updates
@@ -24,8 +22,6 @@ async function refreshAccessToken() {
                 useAuthStore.getState().logout();
                 return null;
             }
-
-            console.log('[API] Refresh successful');
 
             // ✅ Update user in store
             if (result.user) {
@@ -51,13 +47,6 @@ export async function apiCall(
 ): Promise<Response> {
     const store = useAuthStore.getState();
 
-    console.log('[API] Request:', {
-        url,
-        method: options.method || 'GET',
-        hasUser: !!store.user,
-        mode: store.user ? 'authenticated' : 'guest',
-    });
-
     const headers = new Headers({
         'Content-Type': 'application/json',
         ...options.headers,
@@ -72,19 +61,14 @@ export async function apiCall(
         credentials: 'include', // ✅ Cookie otomatik gönderilir
     });
 
-    console.log('[API] Response status:', response.status);
-
     // ✅ 401 durumunda: User varsa refresh dene
     if (response.status === 401) {
-        console.log('[API] Got 401');
 
         // User varsa (daha önce login yapmış), token refresh dene
         if (store.user) {
-            console.log('[API] Attempting token refresh...');
             const refreshResult = await refreshAccessToken();
 
             if (refreshResult?.user) {
-                console.log('[API] Refresh successful, retrying request');
 
                 // Retry with new cookie (otomatik gönderilecek)
                 response = await fetch(url, {
@@ -93,12 +77,7 @@ export async function apiCall(
                     credentials: 'include',
                 });
 
-                console.log('[API] Retry response status:', response.status);
-            } else {
-                console.log('[API] Refresh failed, logging out');
             }
-        } else {
-            console.log('[API] No user, this is a guest request - 401 is expected');
         }
     }
 
@@ -111,8 +90,6 @@ export async function apiCall(
  */
 export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = buildApiUrl(endpoint);
-
-    console.log('[fetchAPI] Fetching:', url);
 
     const response = await apiCall(url, options);
     return parseFetchResponse<T>(response);

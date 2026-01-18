@@ -35,11 +35,10 @@ export const useOrderHub = () => {
   useEffect(() => {
     // Prevent double initialization in StrictMode
     if (isInitializedRef.current) {
-      console.log('Already initialized, skipping...');
       return;
     }
+
     isInitializedRef.current = true;
-    console.log('Initializing SignalR connection...');
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(HUB_URL, { withCredentials: true })
@@ -51,34 +50,28 @@ export const useOrderHub = () => {
 
     // Just increment counter when new order arrives
     connection.on('NewOrder', () => {
-      console.log('New order notification received');
       // Get increment directly from store instead of using dependency
       useNotificationStore.getState().increment();
       playNotificationSound();
     });
 
     connection.onreconnecting(() => {
-      console.log('SignalR reconnecting...');
       setIsConnected(false);
     });
 
     connection.onreconnected(() => {
-      console.log('SignalR reconnected');
       setIsConnected(true);
     });
 
     connection.onclose(() => {
-      console.log('SignalR connection closed');
       setIsConnected(false);
     });
 
     const startConnection = async () => {
       try {
         await connection.start();
-        console.log('SignalR connected to OrderHub');
         setIsConnected(true);
       } catch (err) {
-        console.error('SignalR connection error:', err);
         setIsConnected(false);
         setTimeout(startConnection, 5000);
       }
@@ -87,7 +80,6 @@ export const useOrderHub = () => {
     startConnection();
 
     return () => {
-      console.log('Cleanup: stopping connection');
       connection.stop();
     };
   }, []); // Empty dependency array - run only once

@@ -19,11 +19,7 @@ export function useDashboard() {
     const fetchData = async () => {
         try {
             setError(null);
-            console.log('[useDashboard] Fetching dashboard data...');
-
             const dashboardData = await dashboardService.getDashboardData();
-
-            console.log('[useDashboard] Data received:', dashboardData);
             setData(dashboardData);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Bir hata oluştu';
@@ -58,11 +54,7 @@ export function useRecentOrders(limit: number = 10) {
         const fetchOrders = async () => {
             try {
                 setError(null);
-                console.log('[useRecentOrders] Fetching orders...');
-
                 const data = await dashboardService.getRecentOrders(limit);
-
-                console.log('[useRecentOrders] Orders received:', data);
                 setOrders(data);
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Bir hata oluştu';
@@ -91,11 +83,7 @@ export function useSalesData(period: 'week' | 'month' | 'year' = 'month') {
         const fetchSales = async () => {
             try {
                 setError(null);
-                console.log('[useSalesData] Fetching sales data...');
-
                 const data = await dashboardService.getSalesData(period);
-
-                console.log('[useSalesData] Sales data received:', data);
                 setSalesData(data);
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Bir hata oluştu';

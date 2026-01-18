@@ -304,7 +304,6 @@ export default function ProductFormPage() {
                 try {
                     // Try to delete from Cloudinary
                     await cloudinaryService.deleteImage(publicId, false);
-                    console.log('Image deleted from Cloudinary:', publicId);
                 } catch (cloudinaryError: any) {
                     // If image not found in Cloudinary, that's okay - it might have been deleted already
                     if (cloudinaryError.message?.includes('not found')) {
@@ -337,7 +336,6 @@ export default function ProductFormPage() {
                 try {
                     // Try to delete from Cloudinary
                     await cloudinaryService.deleteImage(publicId, false);
-                    console.log('Image deleted from Cloudinary:', publicId);
                 } catch (cloudinaryError: any) {
                     // If image not found in Cloudinary, that's okay - it might have been deleted already
                     if (cloudinaryError.message?.includes('not found')) {
@@ -788,9 +786,7 @@ export default function ProductFormPage() {
                             <CldUploadWidget
                                 uploadPreset="productimages"
                                 onSuccess={(result: any) => {
-                                    console.log('Upload successful:', result);
                                     const imageUrl = result.info.secure_url;
-                                    console.log('Image URL:', imageUrl);
                                     handleAddImage(imageUrl);
                                     toast.success('Görsel başarıyla yüklendi!');
                                 }}

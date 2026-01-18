@@ -16,7 +16,6 @@ export const productService = {
      * GET /product
      */
     async getProducts(filters?: ProductFilters): Promise<Product[]> {
-        console.log('[productService] Getting products with filters:', filters);
 
         const params = new URLSearchParams();
 
@@ -49,7 +48,6 @@ export const productService = {
      * POST /product
      */
     async createProduct(product: CreateProductRequest): Promise<Product> {
-        console.log('[productService] Creating product:', product);
         return await fetchAPI<Product>('product', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -62,7 +60,6 @@ export const productService = {
      * PUT /product/{id}
      */
     async updateProduct(id: number, product: UpdateProductRequest): Promise<Product> {
-        console.log('[productService] Updating product:', id, product);
         return await fetchAPI<Product>(`product/${id}`, {
             method: 'PUT',
             body: JSON.stringify(product),
@@ -74,7 +71,6 @@ export const productService = {
      * DELETE /product/{id}
      */
     async deleteProduct(id: number): Promise<void> {
-        console.log('[productService] Deleting product:', id);
         await fetchAPI<void>(`product/${id}`, {
             method: 'DELETE',
         });
@@ -85,7 +81,6 @@ export const productService = {
      * PATCH /product/{id}/status
      */
     async updateProductStatus(id: number, isActive: boolean): Promise<void> {
-        console.log('[productService] Updating product status:', id, isActive);
         await fetchAPI<void>(`product/${id}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ isActive }),
@@ -97,7 +92,6 @@ export const productService = {
      * PATCH /product/{id}/stock
      */
     async updateProductStock(id: string, stock: number): Promise<void> {
-        console.log('[productService] Updating product stock:', id, stock);
         await fetchAPI<void>(`product/${id}/stock`, {
             method: 'PATCH',
             body: JSON.stringify({ stock }),
@@ -109,7 +103,6 @@ export const productService = {
      * GET /product/categories
      */
     async getCategories(): Promise<string[]> {
-        console.log('[productService] Getting categories');
         return await fetchAPI<string[]>('product/categories');
     },
 };

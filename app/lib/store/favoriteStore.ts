@@ -33,10 +33,6 @@ export const useFavoriteStore = create<FavoriteStoreState>()(
                     });
                 } catch (error: any) {
                     console.error('Error initializing favorites:', error);
-                    // 401 hatası normal (kullanıcı henüz authenticated değil veya cookie hazır değil)
-                    if (error?.message?.includes('401')) {
-                        console.log('User not authenticated yet, skipping favorites initialization');
-                    }
                     set({ loading: false });
                 }
             },

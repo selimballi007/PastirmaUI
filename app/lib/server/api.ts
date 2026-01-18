@@ -12,8 +12,6 @@ import { buildApiUrl, parseFetchResponse } from '@/app/lib/utils/fetch';
 export async function serverFetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = buildApiUrl(endpoint);
 
-    console.log('[Server] Fetching:', url);
-
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...options?.headers,
