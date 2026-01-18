@@ -14,13 +14,11 @@ export default function CampaignProducts({ products }: CampaignProductsProps) {
 
     const handleAddToCart = (productId: number) => {
         // TODO: Cart store'a ekle
-        console.log('Add to cart:', productId);
         toast.success('Ürün sepete eklendi!');
     };
 
     const handleQuickView = (productId: number) => {
         // TODO: Quick view modal aç
-        console.log('Quick view:', productId);
     };
 
     // İndirim yüzdesini hesapla

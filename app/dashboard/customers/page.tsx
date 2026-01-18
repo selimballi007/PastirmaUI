@@ -36,7 +36,6 @@ export default function CustomersPage() {
             const result = await fetchAPI<PagedResult<Customer>>(
                 `user/customers?page=${page}&pageSize=10`
             );
-            console.log('API Response:', result); // Debug log
             setCustomers(result.data || []);
             setTotalPages(result.totalPages || 1);
             setTotalCount(result.totalCount || 0);

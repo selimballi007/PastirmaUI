@@ -16,21 +16,9 @@ export function middleware(request: NextRequest) {
 
     // User is authenticated if they have an accessToken
     const isAuthenticated = !!accessToken;
-
-    // Log for debugging with full cookie details
-    console.log('[Middleware] 🔍', {
-        pathname,
-        isAuthenticated,
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-        accessTokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : 'NONE',
-        allCookies: request.cookies.getAll().map(c => c.name),
-    });
-
     // Protect dashboard routes
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
     if (isProtectedRoute && !isAuthenticated) {
-        console.log('[Middleware] Redirecting to login - protected route without auth');
         const url = new URL('/account/login', request.url);
         url.searchParams.set('redirect', pathname);
         return NextResponse.redirect(url);
@@ -39,7 +27,6 @@ export function middleware(request: NextRequest) {
     // Redirect authenticated users away from auth pages
     const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
     if (isAuthRoute && isAuthenticated) {
-        console.log('[Middleware] Redirecting to home - already authenticated');
         return NextResponse.redirect(new URL('/', request.url));
     }
 

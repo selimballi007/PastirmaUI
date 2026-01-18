@@ -17,7 +17,6 @@ export default function ProtectedRoute({
     useEffect(() => {
         // ✅ Sadece protected sayfalar için login kontrolü
         if (!isLoading && !user) {
-            console.log('🔒 [ProtectedRoute] Redirecting to login');
             router.push('/account/login?redirect=' + encodeURIComponent(window.location.pathname));
         }
     }, [user, isLoading, router]);

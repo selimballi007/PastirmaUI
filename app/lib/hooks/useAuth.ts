@@ -19,15 +19,12 @@ export const useAuthActions = () => {
 
     const logOut = useCallback(async () => {
         try {
-            console.log('🔴 [useAuth] Starting logout...');
-
             // ✅ Server Action ile logout - cookies'leri manuel olarak siler
             // Backend'e de logout isteği gönderir (token invalidation için)
             await logoutAction();
 
             // Client-side temizlik (Zustand store)
             logoutStore();
-            console.log('✅ [useAuth] Client state cleared');
 
             // Yönlendirme
             router.push('/');

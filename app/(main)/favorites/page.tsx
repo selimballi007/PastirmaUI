@@ -62,12 +62,10 @@ export default function FavoritesPage() {
 
     const handleAddToCart = (productId: number) => {
         // This is handled by ProductCard's internal logic
-        console.log('Add to cart:', productId);
     };
 
     const handleQuickView = (productId: number) => {
         // TODO: Implement quick view modal
-        console.log('Quick view:', productId);
     };
 
     if (!user) {

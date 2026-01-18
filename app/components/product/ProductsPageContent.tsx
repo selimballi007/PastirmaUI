@@ -52,12 +52,10 @@ export default function ProductsPageContent({
     };
 
     const handleAddToCart = (productId: number) => {
-        console.log('Add to cart:', productId);
         toast.success('Ürün sepete eklendi!');
     };
 
     const handleQuickView = (productId: number) => {
-        console.log('Quick view:', productId);
     };
 
     // Client-side filtering and sorting

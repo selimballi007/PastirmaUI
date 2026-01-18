@@ -26,8 +26,6 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
 
             login: (user) => {
-                console.log('🔵 [AuthStore.login] Called');
-                console.log('🔵🔴🟢', user);
                 set({
                     user,
                     error: null,
@@ -46,7 +44,6 @@ export const useAuthStore = create<AuthStore>()(
             },
 
             logout: async () => {
-                console.log('🔴 [AuthStore.logout] Called');
                 set({
                     user: null,
                     error: null,

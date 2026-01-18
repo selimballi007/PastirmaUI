@@ -26,16 +26,6 @@ export default function RegisterFormClient() {
     // ✅ Manual processing state for immediate UI feedback
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // ✅ Debug: Log when isProcessing changes
-    useEffect(() => {
-        console.log('[RegisterForm] isProcessing changed to:', isProcessing);
-    }, [isProcessing]);
-
-    // ✅ Debug: Log when isPending changes
-    useEffect(() => {
-        console.log('[RegisterForm] isPending changed to:', isPending);
-    }, [isPending]);
-
     // ✅ Başarılı kayıt sonrası yönlendirme
     useEffect(() => {
         if (state.success) {
@@ -73,7 +63,6 @@ export default function RegisterFormClient() {
 
     // ✅ Handle submit - useCallback ile memoize
     const handleSubmit = useCallback(async (formData: FormData) => {
-        console.log('[RegisterForm] Form submitted, setting isProcessing=true');
 
         // ✅ flushSync: Force immediate synchronous render BEFORE captcha fetch
         // Without this, React batches the state update and it happens AFTER captcha
@@ -81,11 +70,9 @@ export default function RegisterFormClient() {
             setIsProcessing(true);
         });
 
-        console.log('[RegisterForm] After flushSync, fetching captcha...');
-
         try {
             const token = await getCaptchaToken();
-            console.log('[RegisterForm] Captcha token received:', token ? 'success' : 'failed');
+
             if (!token) {
                 setIsProcessing(false);
                 return;

@@ -206,9 +206,7 @@ export default function SlideModal({ isOpen, editingSlide, onClose, onSave }: Sl
                         <CldUploadWidget
                             uploadPreset="heroslides"
                             onSuccess={(result: any) => {
-                                console.log('Upload successful:', result);
                                 const imageUrl = result.info.secure_url;
-                                console.log('Image URL:', imageUrl);
                                 setFormData(prev => ({ ...prev, imageUrl }));
                                 toast.success('Görsel başarıyla yüklendi!');
                             }}

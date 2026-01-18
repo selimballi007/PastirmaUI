@@ -44,12 +44,8 @@ export default function LoginForm() {
             // ✅ Redirect parametresini kontrol et
             const redirect = searchParams.get('redirect') || (loginState.user.role === 'Admin' ? '/dashboard' : '/');
 
-            console.log('🚀 Login successful, will redirect to:', redirect);
-            console.log('👤 User role:', loginState.user.role);
-
             // ✅ Cookie'ler artık Server Action'da set ediliyor
             // router.push() kullanarak smooth client-side navigation
-            console.log('✅ Redirecting to:', redirect);
             router.push(redirect);
         } else if (loginState && !loginState.success) {
             // ✅ Login başarısız olursa processing state'i sıfırla
