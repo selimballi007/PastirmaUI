@@ -1,64 +1,56 @@
-import React, { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ButtonWithSpinnerProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     loading?: boolean;
     children: React.ReactNode;
-    variant?: "green" | "blue" | "red"; // farklı renk opsiyonları
+    variant?: "primary" | "success" | "danger" | "secondary" | "green" | "blue" | "red";
 }
 
 const variantClasses: Record<string, string> = {
-    green: "bg-green-500 hover:bg-green-600 text-white",
-    blue: "bg-blue-500 hover:bg-blue-600 text-white",
-    red: "bg-red-500 hover:bg-red-600 text-white",
+    // New semantic names
+    primary: "bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-600/25 hover:shadow-orange-600/40",
+    success: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25 hover:shadow-red-600/40",
+    secondary: "bg-gray-600 hover:bg-gray-700 text-white shadow-lg shadow-gray-600/25 hover:shadow-gray-600/40",
+    // Legacy names (backward compatibility)
+    green: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40",
+    blue: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40",
+    red: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25 hover:shadow-red-600/40",
 };
 
 export default function ButtonWithSpinner({
     loading = false,
     children,
-    variant = "green",
+    variant = "primary",
     disabled,
     className = "",
     ...props
 }: ButtonWithSpinnerProps) {
-    // ✅ Debug: Log when loading prop changes
-    React.useEffect(() => {
-        console.log('[ButtonWithSpinner] loading prop changed to:', loading);
-    }, [loading]);
+    const isDisabled = loading || disabled;
 
     return (
         <button
-            disabled={loading || disabled}
+            disabled={isDisabled}
             className={`
-        w-full flex justify-center items-center gap-2 font-medium py-3 rounded-lg transition transform
-        ${loading || disabled ? "bg-gray-400 cursor-not-allowed" : variantClasses[variant]}
-        ${!loading && !disabled ? "active:scale-95" : ""}
-        ${className}
-      `}
+                w-full flex justify-center items-center gap-2
+                font-semibold py-3 px-6 rounded-xl
+                transition-all duration-200 ease-out
+                ${isDisabled
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                    : variantClasses[variant]
+                }
+                ${!isDisabled ? "active:scale-[0.98] hover:-translate-y-0.5" : ""}
+                ${className}
+            `}
             {...props}
         >
             {loading && (
-                <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                >
-                    <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                    ></circle>
-                    <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 018 8h-4l3 3-3 3h4a8 8 0 01-8 8v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
-                    ></path>
-                </svg>
+                <Loader2 className="w-5 h-5 animate-spin" />
             )}
-            {children}
+            <span className={loading ? "opacity-80" : ""}>
+                {children}
+            </span>
         </button>
     );
 }
