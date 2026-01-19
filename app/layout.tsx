@@ -10,6 +10,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'tr_TR',
     siteName: 'Pastırma',
+    images: [
+      {
+        url: '/pastirma.jpg', // image path in the public folder
+        width: 1200,
+        height: 630,
+        alt: 'Pastırma UI Tanıtım Görseli',
+      },
+    ],
     title: 'Pastırma - En Taze Pastırmalar',
     description: 'Türkiye\'nin en kaliteli pastırma ve şarküteri ürünlerini keşfedin.',
   },
