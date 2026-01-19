@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     siteName: 'Pastırma',
     images: [
       {
-        url: '/pastirma.jpg', // image path in the public folder
+        url: 'https://https://res.cloudinary.com/dngul4236/image/upload/v1767076058/hero-slides/uf67mz7tdimytspztnrt.jpg',
         width: 1200,
         height: 630,
         alt: 'Pastırma UI Tanıtım Görseli',
