@@ -39,8 +39,10 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
             {heroSlides.map((slide, index) => (
                 <div
                     key={slide.id}
-                    className={`absolute inset-0 transition-all duration-700 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                        }`}
+                    className={`absolute inset-0 transition-all duration-700 ${index === currentSlide
+                        ? 'opacity-100 scale-100 pointer-events-auto z-10'
+                        : 'opacity-0 scale-105 pointer-events-none z-0'
+                    }`}
                 >
                     <div className="absolute inset-0">
                         <Image
