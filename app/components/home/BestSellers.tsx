@@ -66,7 +66,6 @@ export default function BestSellers({ products }: BestSellersProps) {
                             categoryName={product.categoryName}
                             isBestSeller={true}
                             onAddToCart={handleAddToCart}
-                            onQuickView={handleQuickView}
                             variant="default"
                             showReviews={true}
                         />

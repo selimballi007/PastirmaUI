@@ -77,7 +77,6 @@ export default function CampaignProducts({ products }: CampaignProductsProps) {
                                 badge={discount > 0 ? `%${discount} İndirim` : undefined}
                                 badgeColor="bg-red-600"
                                 onAddToCart={handleAddToCart}
-                                onQuickView={handleQuickView}
                                 variant="detailed" // ✅ Detailed variant (daha gösterişli)
                                 showReviews={true}
                             />

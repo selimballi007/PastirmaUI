@@ -196,7 +196,7 @@ export default function ProductCard({
                                 onError={() => setImageError(true)}
                             />
                         )}
-                        {discount > 0 && (
+                        {discount > 0 && !isSpecialOffer && (
                             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
                                 %{discount}
                             </div>
@@ -258,7 +258,7 @@ export default function ProductCard({
 
                         {/* Badges */}
                         <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                            {discount > 0 && (
+                            {discount > 0 && !isSpecialOffer && (
                                 <div className="bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
                                     %{discount} İNDİRİM
                                 </div>
@@ -397,8 +397,8 @@ export default function ProductCard({
                         />
                     )}
 
-                    {/* Discount Badge */}
-                    {discount > 0 && (
+                    {/* Discount Badge - hidden when isSpecialOffer (Fırsat badge already implies discount) */}
+                    {discount > 0 && !isSpecialOffer && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full font-bold shadow-lg">
                             %{discount}
                         </div>
