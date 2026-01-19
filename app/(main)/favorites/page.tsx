@@ -166,7 +166,6 @@ export default function FavoritesPage() {
                             isNew={product.isNew}
                             isSpecialOffer={product.isCampaign}
                             onAddToCart={handleAddToCart}
-                            onQuickView={handleQuickView}
                             variant="default"
                             showReviews={false}
                         />

@@ -341,7 +341,6 @@ export default function ProductsPageContent({
                                             isNew={product.isNew}
                                             isSpecialOffer={product.isCampaign}
                                             onAddToCart={handleAddToCart}
-                                            onQuickView={handleQuickView}
                                             variant={viewMode === 'list' ? 'detailed' : 'default'}
                                             showReviews={true}
                                         />

@@ -12,21 +12,8 @@ interface CampaignProductsProps {
 
 export default function CampaignProducts({ products }: CampaignProductsProps) {
 
-    const handleAddToCart = (productId: number) => {
-        // TODO: Cart store'a ekle
+    const handleAddToCart = () => {
         toast.success('Ürün sepete eklendi!');
-    };
-
-    const handleQuickView = (productId: number) => {
-        // TODO: Quick view modal aç
-    };
-
-    // İndirim yüzdesini hesapla
-    const calculateDiscount = (price: number, oldPrice?: number) => {
-        if (oldPrice && oldPrice > price) {
-            return Math.round(((oldPrice - price) / oldPrice) * 100);
-        }
-        return 0;
     };
 
     if (products.length === 0) {
@@ -59,30 +46,23 @@ export default function CampaignProducts({ products }: CampaignProductsProps) {
 
                 {/* Products Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {products.map((product) => {
-                        const discount = calculateDiscount(product.price, product.oldPrice);
-
-                        return (
-                            <ProductCard
-                                key={product.id}
-                                id={product.id}
-                                name={product.name}
-                                price={product.price}
-                                oldPrice={product.oldPrice}
-                                imageUrl={product.imageUrl}
-                                rating={product.rating}
-                                reviews={product.reviewCount}
-                                stock={product.stock}
-                                categoryName={product.categoryName}
-                                badge={discount > 0 ? `%${discount} İndirim` : undefined}
-                                badgeColor="bg-red-600"
-                                onAddToCart={handleAddToCart}
-                                onQuickView={handleQuickView}
-                                variant="detailed" // ✅ Detailed variant (daha gösterişli)
-                                showReviews={true}
-                            />
-                        );
-                    })}
+                    {products.map((product) => (
+                        <ProductCard
+                            key={product.id}
+                            id={product.id}
+                            name={product.name}
+                            price={product.price}
+                            oldPrice={product.oldPrice}
+                            imageUrl={product.imageUrl}
+                            rating={product.rating}
+                            reviews={product.reviewCount}
+                            stock={product.stock}
+                            categoryName={product.categoryName}
+                            onAddToCart={handleAddToCart}
+                            variant="detailed"
+                            showReviews={true}
+                        />
+                    ))}
                 </div>
 
                 {/* Campaign Info Banner */}
