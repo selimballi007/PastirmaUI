@@ -160,12 +160,12 @@ export default function ContactPage() {
                                     <Mail className="w-5 h-5 text-orange-600 mt-1 flex-shrink-0" />
                                     <div>
                                         <h3 className="font-semibold text-gray-900 mb-1">E-posta</h3>
-                                        <a href="mailto:info@pastirmaadasi.com" className="text-gray-600 text-sm hover:text-orange-600">
-                                            info@pastirmaadasi.com
+                                        <a href="mailto:admin@email.devexer.uk" className="text-gray-600 text-sm hover:text-orange-600">
+                                            admin@email.devexer.uk
                                         </a>
                                         <br />
-                                        <a href="mailto:siparis@pastirmaadasi.com" className="text-gray-600 text-sm hover:text-orange-600">
-                                            siparis@pastirmaadasi.com
+                                        <a href="mailto:admin@email.devexer.uk" className="text-gray-600 text-sm hover:text-orange-600">
+                                            admin@email.devexer.uk
                                         </a>
                                     </div>
                                 </div>
