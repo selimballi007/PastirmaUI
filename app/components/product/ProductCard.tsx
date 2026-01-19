@@ -10,7 +10,6 @@ import { useCartStore } from '@/app/lib/store/cartStore';
 import {
     ShoppingCart,
     Heart,
-    Eye,
     Star,
     Package,
     TrendingUp,
@@ -36,7 +35,6 @@ interface ProductCardProps {
     badge?: string;
     badgeColor?: string;
     onAddToCart?: (id: number) => void;
-    onQuickView?: (id: number) => void;
     variant?: 'default' | 'compact' | 'detailed';
     showReviews?: boolean; // ✅ Yeni prop
 }
@@ -58,7 +56,6 @@ export default function ProductCard({
     badge,
     badgeColor,
     onAddToCart,
-    onQuickView,
     variant = 'default',
     showReviews = true, // ✅ Default true
 }: ProductCardProps) {
@@ -146,12 +143,6 @@ export default function ProductCard({
         } catch (error: any) {
             toast.error(error.message || 'Sepete eklenirken bir hata oluştu.');
         }
-    };
-
-    const handleQuickView = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onQuickView?.(id);
     };
 
     // ✅ Yıldız renderı için helper component
@@ -291,14 +282,6 @@ export default function ProductCard({
                                         } ${favoriteLoading ? 'animate-pulse' : ''}`}
                                 />
                             </button>
-                            {onQuickView && (
-                                <button
-                                    onClick={handleQuickView}
-                                    className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
-                                >
-                                    <Eye className="w-5 h-5 text-gray-700" />
-                                </button>
-                            )}
                         </div>
 
                         {/* Stock warning */}
@@ -441,14 +424,6 @@ export default function ProductCard({
                                     } ${favoriteLoading ? 'animate-pulse' : ''}`}
                             />
                         </button>
-                        {onQuickView && (
-                            <button
-                                onClick={handleQuickView}
-                                className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
-                            >
-                                <Eye className="w-5 h-5 text-gray-700" />
-                            </button>
-                        )}
                     </div>
 
                     {/* Sales Badge (bottom left) */}
