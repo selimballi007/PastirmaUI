@@ -15,6 +15,7 @@ export interface HeroSlide {
     discount: string;
     image: string;
     buttonText: string;
+    buttonLink?: string;
     bgColor: string;
 }
 
@@ -31,6 +32,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
             discount: slide.discount || '',
             image: slide.imageUrl,
             buttonText: slide.buttonText,
+            buttonLink: slide.buttonLink || '',
             bgColor: slide.bgColor,
         }));
     } catch (error) {

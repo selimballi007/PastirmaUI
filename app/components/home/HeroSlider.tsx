@@ -73,7 +73,7 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                                 {slide.description}
                             </p>
                             <Link
-                                href="/products"
+                                href={slide.buttonLink || '#'}
                                 className="inline-flex items-center px-8 py-4 bg-white text-gray-900 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors shadow-xl"
                             >
                                 {slide.buttonText}

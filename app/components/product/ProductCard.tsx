@@ -376,7 +376,6 @@ export default function ProductCard({
             </Link>
         );
     }
-
     // Default variant
     return (
         <Link href={`/products/${id}`}>
@@ -398,7 +397,7 @@ export default function ProductCard({
                     )}
 
                     {/* Discount Badge - hidden when isSpecialOffer (Fırsat badge already implies discount) */}
-                    {discount > 0 && !isSpecialOffer && (
+                    {discount > 0 && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full font-bold shadow-lg">
                             %{discount}
                         </div>
